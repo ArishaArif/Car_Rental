@@ -3,6 +3,7 @@ import {
   View,
   TouchableOpacity,
   ViewStyle,
+  StyleProp,
   TouchableOpacityProps,
 } from 'react-native';
 import { useTheme } from '../../theme';
@@ -15,7 +16,7 @@ export interface CardProps extends TouchableOpacityProps {
   variant?: CardVariant;
   padding?: CardPadding;
   onPress?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Card: React.FC<CardProps> = ({

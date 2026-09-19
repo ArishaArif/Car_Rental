@@ -6,3 +6,4 @@ export * from './Header';
 export * from './Loading';
 export * from './EmptyState';
 export * from './ErrorState';
+export * from '../cars/CarCard';
