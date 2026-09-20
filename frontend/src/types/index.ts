@@ -58,9 +58,11 @@ export interface AuthUser {
   avatarUrl?: string;
   city?: string;
   licenseNumber?: string;
+  licenseExpiry?: string;
   businessName?: string;
   fleetSize?: string;
   department?: string;
+  preferences?: CustomerPreferences;
 }
 
 export interface UserProfile {
@@ -128,9 +130,50 @@ export type SortOption =
   | 'rating_desc'
   | 'year_desc';
 
-export type BookingStatus = 'Confirmed' | 'Active' | 'Completed' | 'Cancelled';
+export type BookingStatus = 'Pending' | 'Confirmed' | 'Active' | 'Completed' | 'Cancelled';
 export type PaymentMethod = 'Card' | 'JazzCash' | 'EasyPaisa';
 export type PaymentStatus = 'Pending' | 'Processing' | 'Paid' | 'Failed';
+
+export interface VehicleInspection {
+  exteriorCondition: 'Good' | 'Minor Scratches' | 'Damaged';
+  interiorCondition: 'Clean' | 'Normal' | 'Needs Cleaning';
+  fuelLevel: number; // percentage 0 - 100
+  odometerReading: number; // km
+  generalNotes?: string;
+  inspectionPassed: boolean;
+  inspectedAt: string;
+}
+
+export interface BookingInvoice {
+  invoiceNumber: string;
+  bookingId: string;
+  issuedAt: string;
+  baseRental: number;
+  serviceFee: number;
+  taxes: number;
+  securityDeposit: number;
+  lateCharges: number;
+  damageCharges: number;
+  depositRefund: number;
+  finalAmount: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+}
+
+export type AppLanguage = 'English' | 'Urdu' | 'Roman Urdu';
+
+export interface CustomerPreferences {
+  language: AppLanguage;
+  preferredCategory: VehicleCategory | 'All';
+  preferredTransmission: TransmissionType | 'All';
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  emailReceipts: boolean;
+  biometricLogin: boolean;
+  locationServices: boolean;
+  currency: 'USD' | 'PKR';
+  distanceUnit: 'km' | 'mi';
+}
 
 export interface BookingPricing {
   dailyPrice: number;
@@ -183,6 +226,11 @@ export interface Booking {
   status: BookingStatus;
   createdAt: string;
   pickupCode: string;
+  pickupMileage?: number;
+  dropoffMileage?: number;
+  dropoffFuel?: number;
+  inspection?: VehicleInspection;
+  invoice?: BookingInvoice;
 }
 
 export type CustomerStackParamList = {
@@ -205,8 +253,21 @@ export type CustomerStackParamList = {
   CustomerDetails: { vehicleId: string };
   BookingPayment: { vehicleId: string };
   BookingConfirmation: { bookingId: string };
-  MyBookings: undefined;
+  MyBookings: { initialTab?: 'all' | 'upcoming' | 'active' | 'completed' | 'cancelled' } | undefined;
   BookingDetails: { bookingId: string };
+  ActiveRental: { bookingId?: string } | undefined;
+  ReturnVehicle: { bookingId: string };
+  ReturnInspection: {
+    bookingId: string;
+    returnLocation?: string;
+    dropoffMileage?: number;
+    dropoffFuel?: number;
+  };
+  ReturnConfirmation: { bookingId: string };
+  FinalInvoice: { bookingId: string };
+  CustomerProfile: undefined;
+  EditProfile: undefined;
+  CustomerSettings: undefined;
 };
 
 export type ProviderStackParamList = {

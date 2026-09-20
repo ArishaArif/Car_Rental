@@ -11,6 +11,7 @@ import { CustomerStackParamList, Vehicle } from '../../types';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useFavorites } from '../../context/FavoritesContext';
+import { useBooking } from '../../context/BookingContext';
 import { vehicleService, CategorySummary } from '../../services/vehicleService';
 import { ScreenContainer, Card, CarCard, Loading } from '../../components/common';
 
@@ -27,6 +28,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
   const { colors, typography, spacing, borderRadius } = useTheme();
   const { user, logout } = useAuth();
   const { favorites } = useFavorites();
+  const { activeRental, bookings } = useBooking();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
@@ -67,7 +69,11 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           },
         ]}
       >
-        <View style={styles.headerUser}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('CustomerProfile')}
+          style={styles.headerUser}
+        >
           <View
             style={[
               styles.userAvatarBadge,
@@ -93,7 +99,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
               {user?.name || 'Customer'}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.headerActions}>
           {/* Favorites Shortcut with Badge */}
@@ -127,6 +133,23 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             ) : null}
           </TouchableOpacity>
 
+          {/* Settings Shortcut */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CustomerSettings')}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: colors.surfaceVariant,
+                borderColor: colors.border,
+                borderRadius: borderRadius.md,
+                marginLeft: 8,
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 16 }}>⚙️</Text>
+          </TouchableOpacity>
+
           {/* Sign Out Shortcut */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -147,11 +170,92 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
       </View>
 
       <View style={[styles.content, { paddingHorizontal: spacing.md, paddingVertical: spacing.md }]}>
+        {/* Active Rental In Progress Live Banner */}
+        {activeRental ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ActiveRental', { bookingId: activeRental.id })}
+            style={[
+              styles.activeRentalBanner,
+              {
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                borderColor: colors.accent,
+                borderRadius: borderRadius.lg,
+                padding: spacing.md,
+                marginBottom: spacing.md,
+              },
+            ]}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={[styles.pulseDot, { backgroundColor: colors.accent }]} />
+                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
+                  ACTIVE RENTAL IN PROGRESS
+                </Text>
+              </View>
+              <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800' }}>
+                MANAGE KEYLESS →
+              </Text>
+            </View>
+            <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.md, fontWeight: '800', marginTop: 4 }}>
+              {activeRental.vehicle.brand} {activeRental.vehicle.model}
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: typography.fontSizes.xs, marginTop: 2 }}>
+              Scheduled return: {activeRental.returnDate} · {activeRental.returnLocation}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {/* Customer Mobility Quick Hub Bar */}
+        <View style={styles.quickBar}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('MyBookings')}
+            style={[
+              styles.quickBarBtn,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderRadius: borderRadius.md,
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 16, marginRight: 6 }}>📑</Text>
+            <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs, fontWeight: '700' }}>
+              My Bookings ({bookings.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('ActiveRental')}
+            style={[
+              styles.quickBarBtn,
+              {
+                backgroundColor: activeRental ? 'rgba(16, 185, 129, 0.12)' : colors.surface,
+                borderColor: activeRental ? colors.accent : colors.border,
+                borderRadius: borderRadius.md,
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 16, marginRight: 6 }}>🔑</Text>
+            <Text
+              style={{
+                color: activeRental ? colors.accent : colors.textPrimary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              Active Rental
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Hero Search Box */}
         <Card
           variant="elevated"
           padding="medium"
-          style={[styles.heroCard, { borderColor: colors.border, marginBottom: spacing.lg }]}
+          style={[styles.heroCard, { borderColor: colors.border, marginVertical: spacing.md }]}
         >
           <View style={styles.heroTextContainer}>
             <Text
@@ -472,5 +576,28 @@ const styles = StyleSheet.create({
   },
   categoryCount: {
     marginTop: 2,
+  },
+  activeRentalBanner: {
+    borderWidth: 1.5,
+  },
+  pulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  quickBar: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 4,
+  },
+  quickBarBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
   },
 });

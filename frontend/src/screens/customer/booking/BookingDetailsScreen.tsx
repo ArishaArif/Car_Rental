@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity,
   Alert,
   ScrollView,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { CustomerStackParamList, Booking } from '../../../types';
+import { CustomerStackParamList, Booking, BookingStatus } from '../../../types';
 import { useTheme } from '../../../theme';
 import { useBooking } from '../../../context/BookingContext';
 import { bookingService } from '../../../services/bookingService';
@@ -33,23 +32,23 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
 }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
   const { bookingId } = route.params;
-  const { cancelBooking } = useBooking();
+  const { cancelBooking, activateBooking } = useBooking();
 
   const [booking, setBooking] = useState<Booking | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const b = await bookingService.getBookingById(bookingId);
       setBooking(b);
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId]);
 
   useEffect(() => {
     fetchDetails();
-  }, [bookingId]);
+  }, [fetchDetails]);
 
   if (loading) {
     return <Loading fullScreen message="Loading reservation voucher..." />;
@@ -77,16 +76,32 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
   }
 
   const { vehicle, pricing, customer } = booking;
-  const canCancel = booking.status === 'Confirmed';
+  const isCancellable = booking.status === 'Confirmed' || booking.status === 'Pending';
+  const isActive = booking.status === 'Active';
+  const isCompleted = booking.status === 'Completed';
+  const isCancelled = booking.status === 'Cancelled';
+
+  const getBadgeColors = (status: BookingStatus) => {
+    switch (status) {
+      case 'Pending':
+        return { bg: 'rgba(234, 179, 8, 0.15)', border: '#EAB308', text: '#EAB308' };
+      case 'Confirmed':
+        return { bg: 'rgba(0, 229, 255, 0.15)', border: colors.primary, text: colors.primary };
+      case 'Active':
+        return { bg: 'rgba(16, 185, 129, 0.15)', border: colors.accent, text: colors.accent };
+      case 'Completed':
+        return { bg: colors.surfaceVariant, border: colors.border, text: colors.textSecondary };
+      case 'Cancelled':
+        return { bg: 'rgba(239, 68, 68, 0.15)', border: colors.danger, text: colors.danger };
+    }
+  };
+
+  const badge = getBadgeColors(booking.status);
 
   const handleCancelPress = () => {
     Alert.alert(
       'Cancel Reservation?',
-      'Are you sure you want to cancel this booking? Because this is within the 24-hour free cancellation window, a 100% full refund of $' +
-        pricing.total +
-        ' will be initiated to your ' +
-        booking.paymentMethod +
-        '.',
+      `Are you sure you want to cancel this booking? A 100% full refund of $${pricing.total} will be initiated to your ${booking.paymentMethod}.`,
       [
         { text: 'Keep Booking', style: 'cancel' },
         {
@@ -96,6 +111,24 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
             await cancelBooking(booking.id);
             await fetchDetails();
             Alert.alert('Booking Cancelled', 'Your reservation was cancelled and the refund process is underway.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleStartRental = () => {
+    Alert.alert(
+      'Begin Rental?',
+      `Are you ready to unlock and pick up the ${vehicle.brand} ${vehicle.model}? Smart digital key and IoT telematics will be initiated.`,
+      [
+        { text: 'Not Yet', style: 'cancel' },
+        {
+          text: 'Start Rental Now',
+          onPress: async () => {
+            await activateBooking(booking.id);
+            await fetchDetails();
+            navigation.navigate('ActiveRental', { bookingId: booking.id });
           },
         },
       ]
@@ -124,27 +157,93 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
             },
           ]}
         >
-          {canCancel ? (
+          {/* Confirmed / Pending state actions */}
+          {isCancellable ? (
+            <>
+              <Button
+                title="Cancel"
+                variant="danger"
+                size="medium"
+                onPress={handleCancelPress}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Button
+                title="Start Rental 🔑"
+                variant="primary"
+                size="medium"
+                onPress={handleStartRental}
+                style={{ flex: 2 }}
+              />
+            </>
+          ) : null}
+
+          {/* Active rental state actions */}
+          {isActive ? (
+            <>
+              <Button
+                title="Return Car"
+                variant="secondary"
+                size="medium"
+                onPress={() => navigation.navigate('ReturnVehicle', { bookingId: booking.id })}
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Button
+                title="Active Dashboard →"
+                variant="primary"
+                size="medium"
+                onPress={() => navigation.navigate('ActiveRental', { bookingId: booking.id })}
+                style={{ flex: 2 }}
+              />
+            </>
+          ) : null}
+
+          {/* Completed state actions */}
+          {isCompleted ? (
             <Button
-              title="Cancel Booking"
-              variant="danger"
+              title="View Final Invoice 🧾"
+              variant="primary"
               size="large"
-              onPress={handleCancelPress}
-              style={{ flex: 1, marginRight: 8 }}
+              onPress={() => navigation.navigate('FinalInvoice', { bookingId: booking.id })}
+              style={{ flex: 1 }}
             />
           ) : null}
 
-          <Button
-            title="Return to Home"
-            variant="primary"
-            size="large"
-            onPress={() => navigation.navigate('CustomerHome')}
-            style={{ flex: 1, marginLeft: canCancel ? 8 : 0 }}
-          />
+          {/* Cancelled state actions */}
+          {isCancelled ? (
+            <Button
+              title="Find Another Car"
+              variant="primary"
+              size="large"
+              onPress={() => navigation.navigate('VehicleGallery')}
+              style={{ flex: 1 }}
+            />
+          ) : null}
         </View>
       }
     >
       <ScrollView contentContainerStyle={[styles.content, { padding: spacing.md }]}>
+        {/* Cancelled Warning Banner if cancelled */}
+        {isCancelled ? (
+          <View
+            style={[
+              styles.cancelledBanner,
+              {
+                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                borderColor: colors.danger,
+                borderRadius: borderRadius.md,
+                marginBottom: spacing.md,
+              },
+            ]}
+          >
+            <Text style={{ color: colors.danger, fontSize: 13, fontWeight: '700' }}>
+              ⚠️ BOOKING CANCELLED
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4 }}>
+              This reservation was cancelled. Refund of ${pricing.total} was initiated to {booking.paymentMethod}.
+            </Text>
+          </View>
+        ) : null}
+
         {/* Digital Ticket Voucher Box */}
         <Card
           variant="elevated"
@@ -152,8 +251,9 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           style={[
             styles.voucherCard,
             {
-              borderColor: booking.status === 'Confirmed' ? colors.primary : colors.border,
+              borderColor: badge.border,
               backgroundColor: colors.surface,
+              borderRadius: borderRadius.lg,
             },
           ]}
         >
@@ -171,34 +271,13 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
               style={[
                 styles.statusPill,
                 {
-                  backgroundColor:
-                    booking.status === 'Confirmed'
-                      ? 'rgba(0, 229, 255, 0.15)'
-                      : booking.status === 'Active'
-                      ? 'rgba(16, 185, 129, 0.15)'
-                      : colors.surfaceVariant,
-                  borderColor:
-                    booking.status === 'Confirmed'
-                      ? colors.primary
-                      : booking.status === 'Active'
-                      ? colors.accent
-                      : colors.border,
+                  backgroundColor: badge.bg,
+                  borderColor: badge.border,
                   borderRadius: borderRadius.xs,
                 },
               ]}
             >
-              <Text
-                style={{
-                  color:
-                    booking.status === 'Confirmed'
-                      ? colors.primary
-                      : booking.status === 'Active'
-                      ? colors.accent
-                      : colors.textSecondary,
-                  fontSize: 10,
-                  fontWeight: '800',
-                }}
-              >
+              <Text style={{ color: badge.text, fontSize: 10, fontWeight: '800' }}>
                 ● {booking.status.toUpperCase()}
               </Text>
             </View>
@@ -236,7 +315,12 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           </View>
 
           {/* Barcode representation */}
-          <View style={[styles.barcodeBox, { backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.sm, marginTop: spacing.md }]}>
+          <View
+            style={[
+              styles.barcodeBox,
+              { backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.sm, marginTop: spacing.md },
+            ]}
+          >
             <Text style={{ letterSpacing: 6, color: colors.textPrimary, fontSize: 16, fontWeight: '900' }}>
               ||| | |||| || | ||| |||| | |||
             </Text>
@@ -265,7 +349,7 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
         <Card
           variant="elevated"
           padding="small"
-          style={[styles.vehicleCard, { borderColor: colors.border }]}
+          style={[styles.vehicleCard, { borderColor: colors.border, borderRadius: borderRadius.md }]}
         >
           <Image
             source={{ uri: vehicle.image }}
@@ -293,7 +377,7 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           </View>
         </Card>
 
-        {/* Itinerary */}
+        {/* Schedule & Mobility Hub */}
         <Text
           style={[
             styles.sectionTitle,
@@ -309,7 +393,7 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           Schedule & Mobility Hub
         </Text>
 
-        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border }}>
+        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border, borderRadius: borderRadius.md }}>
           <View style={styles.detailRow}>
             <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Pickup Date & Time</Text>
             <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
@@ -366,6 +450,57 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           </View>
         </Card>
 
+        {/* Inspection Report Snippet (if available on Completed bookings) */}
+        {booking.inspection ? (
+          <>
+            <Text
+              style={[
+                styles.sectionTitle,
+                {
+                  color: colors.accent,
+                  fontSize: typography.fontSizes.md,
+                  fontWeight: typography.fontWeights.bold,
+                  marginTop: spacing.lg,
+                  marginBottom: spacing.xs,
+                },
+              ]}
+            >
+              Vehicle Return Inspection
+            </Text>
+
+            <Card
+              variant="elevated"
+              padding="medium"
+              style={{ borderColor: colors.accent, borderRadius: borderRadius.md }}
+            >
+              <View style={styles.detailRow}>
+                <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Exterior Condition</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
+                  ✓ {booking.inspection.exteriorCondition}
+                </Text>
+              </View>
+              <View style={[styles.detailRow, { marginTop: 6 }]}>
+                <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Interior Condition</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
+                  ✓ {booking.inspection.interiorCondition}
+                </Text>
+              </View>
+              <View style={[styles.detailRow, { marginTop: 6 }]}>
+                <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Return Fuel Level</Text>
+                <Text style={{ color: colors.primary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
+                  {booking.inspection.fuelLevel}% Full
+                </Text>
+              </View>
+              <View style={[styles.detailRow, { marginTop: 6 }]}>
+                <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Return Odometer</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
+                  {booking.inspection.odometerReading} km
+                </Text>
+              </View>
+            </Card>
+          </>
+        ) : null}
+
         {/* Pricing & Payment Receipt */}
         <Text
           style={[
@@ -382,7 +517,7 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           Receipt & Payment Details
         </Text>
 
-        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border }}>
+        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border, borderRadius: borderRadius.md }}>
           <View style={styles.detailRow}>
             <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Payment Method</Text>
             <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' }}>
@@ -457,7 +592,7 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
           Driver Profile
         </Text>
 
-        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border }}>
+        <Card variant="elevated" padding="medium" style={{ borderColor: colors.border, borderRadius: borderRadius.md }}>
           <View style={styles.detailRow}>
             <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs }}>Driver Name</Text>
             <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.xs + 1, fontWeight: '600' }}>
@@ -494,6 +629,10 @@ export const BookingDetailsScreen: React.FC<BookingDetailsProps> = ({
 const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
+  },
+  cancelledBanner: {
+    padding: 12,
+    borderWidth: 1,
   },
   voucherCard: {
     borderWidth: 1.5,

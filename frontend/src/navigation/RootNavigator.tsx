@@ -34,6 +34,23 @@ import {
   SortScreen,
   CarDetailsScreen,
   FavoritesScreen,
+  CheckAvailabilityScreen,
+  RentalDatesScreen,
+  RentalLocationScreen,
+  BookingSummaryScreen,
+  CustomerDetailsScreen,
+  BookingPaymentScreen,
+  BookingConfirmationScreen,
+  MyBookingsScreen,
+  BookingDetailsScreen,
+  ActiveRentalScreen,
+  ReturnVehicleScreen,
+  ReturnInspectionScreen,
+  ReturnConfirmationScreen,
+  FinalInvoiceScreen,
+  CustomerProfileScreen,
+  EditProfileScreen,
+  CustomerSettingsScreen,
 } from '../screens/customer';
 
 // Auth Stack Navigator
@@ -78,6 +95,23 @@ const CustomerNavigator: React.FC = () => (
     <CustomerStack.Screen name="SortScreen" component={SortScreen} />
     <CustomerStack.Screen name="CarDetails" component={CarDetailsScreen} />
     <CustomerStack.Screen name="Favorites" component={FavoritesScreen} />
+    <CustomerStack.Screen name="CheckAvailability" component={CheckAvailabilityScreen} />
+    <CustomerStack.Screen name="RentalDates" component={RentalDatesScreen} />
+    <CustomerStack.Screen name="RentalLocation" component={RentalLocationScreen} />
+    <CustomerStack.Screen name="BookingSummary" component={BookingSummaryScreen} />
+    <CustomerStack.Screen name="CustomerDetails" component={CustomerDetailsScreen} />
+    <CustomerStack.Screen name="BookingPayment" component={BookingPaymentScreen} />
+    <CustomerStack.Screen name="BookingConfirmation" component={BookingConfirmationScreen} />
+    <CustomerStack.Screen name="MyBookings" component={MyBookingsScreen} />
+    <CustomerStack.Screen name="BookingDetails" component={BookingDetailsScreen} />
+    <CustomerStack.Screen name="ActiveRental" component={ActiveRentalScreen} />
+    <CustomerStack.Screen name="ReturnVehicle" component={ReturnVehicleScreen} />
+    <CustomerStack.Screen name="ReturnInspection" component={ReturnInspectionScreen} />
+    <CustomerStack.Screen name="ReturnConfirmation" component={ReturnConfirmationScreen} />
+    <CustomerStack.Screen name="FinalInvoice" component={FinalInvoiceScreen} />
+    <CustomerStack.Screen name="CustomerProfile" component={CustomerProfileScreen} />
+    <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} />
+    <CustomerStack.Screen name="CustomerSettings" component={CustomerSettingsScreen} />
   </CustomerStack.Navigator>
 );
 

@@ -3,14 +3,17 @@ import {
   Booking,
   BookingCustomerDetails,
   BookingDraft,
+  BookingInvoice,
   PaymentMethod,
   Vehicle,
+  VehicleInspection,
 } from '../types';
 import { bookingService } from '../services/bookingService';
 
 export interface BookingContextType {
   draft: BookingDraft | null;
   bookings: Booking[];
+  activeRental: Booking | undefined;
   initDraft: (vehicle: Vehicle) => void;
   updateDraft: (patch: Partial<BookingDraft>) => void;
   setDates: (
@@ -30,6 +33,14 @@ export interface BookingContextType {
   clearDraft: () => void;
   refreshBookings: () => Promise<void>;
   cancelBooking: (id: string) => Promise<boolean>;
+  activateBooking: (id: string) => Promise<Booking | undefined>;
+  completeReturn: (
+    bookingId: string,
+    inspection: VehicleInspection,
+    lateCharges?: number,
+    damageCharges?: number
+  ) => Promise<{ booking: Booking; invoice: BookingInvoice }>;
+  getInvoice: (bookingId: string) => Promise<BookingInvoice | undefined>;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -46,6 +57,8 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
     const list = await bookingService.getBookings();
     setBookings(list);
   };
+
+  const activeRental = bookings.find(b => b.status === 'Active');
 
   const initDraft = (vehicle: Vehicle) => {
     // If draft already has this vehicle, preserve dates/locations
@@ -165,11 +178,40 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return ok;
   };
 
+  const activateBooking = async (id: string): Promise<Booking | undefined> => {
+    const activated = await bookingService.activateBooking(id);
+    if (activated) {
+      await refreshBookings();
+    }
+    return activated;
+  };
+
+  const completeReturn = async (
+    bookingId: string,
+    inspection: VehicleInspection,
+    lateCharges: number = 0,
+    damageCharges: number = 0
+  ): Promise<{ booking: Booking; invoice: BookingInvoice }> => {
+    const result = await bookingService.completeReturn(
+      bookingId,
+      inspection,
+      lateCharges,
+      damageCharges
+    );
+    await refreshBookings();
+    return result;
+  };
+
+  const getInvoice = async (bookingId: string): Promise<BookingInvoice | undefined> => {
+    return bookingService.getInvoiceForBooking(bookingId);
+  };
+
   return (
     <BookingContext.Provider
       value={{
         draft,
         bookings,
+        activeRental,
         initDraft,
         updateDraft,
         setDates,
@@ -179,6 +221,9 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
         clearDraft,
         refreshBookings,
         cancelBooking,
+        activateBooking,
+        completeReturn,
+        getInvoice,
       }}
     >
       {children}

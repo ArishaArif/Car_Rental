@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CustomerStackParamList, BookingStatus } from '../../../types';
 import { useTheme } from '../../../theme';
@@ -17,30 +19,55 @@ type MyBookingsNavProp = NativeStackNavigationProp<
   CustomerStackParamList,
   'MyBookings'
 >;
+type MyBookingsRouteProp = RouteProp<CustomerStackParamList, 'MyBookings'>;
 
 interface MyBookingsProps {
   navigation: MyBookingsNavProp;
+  route?: MyBookingsRouteProp;
 }
 
-type TabFilter = 'all' | 'upcoming' | 'completed';
+type TabFilter = 'all' | 'upcoming' | 'active' | 'completed' | 'cancelled';
 
-export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
+export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation, route }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
-  const { bookings } = useBooking();
-  const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const { bookings, cancelBooking } = useBooking();
+  const [activeTab, setActiveTab] = useState<TabFilter>(route?.params?.initialTab || 'all');
+
+  useEffect(() => {
+    if (route?.params?.initialTab) {
+      setActiveTab(route.params.initialTab);
+    }
+  }, [route?.params?.initialTab]);
+
+  const upcomingCount = bookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending').length;
+  const activeCount = bookings.filter(b => b.status === 'Active').length;
+  const completedCount = bookings.filter(b => b.status === 'Completed').length;
+  const cancelledCount = bookings.filter(b => b.status === 'Cancelled').length;
 
   const filteredBookings = bookings.filter(b => {
     if (activeTab === 'upcoming') {
-      return b.status === 'Confirmed' || b.status === 'Active';
+      return b.status === 'Confirmed' || b.status === 'Pending';
+    }
+    if (activeTab === 'active') {
+      return b.status === 'Active';
     }
     if (activeTab === 'completed') {
-      return b.status === 'Completed' || b.status === 'Cancelled';
+      return b.status === 'Completed';
+    }
+    if (activeTab === 'cancelled') {
+      return b.status === 'Cancelled';
     }
     return true;
   });
 
   const getStatusBadgeStyle = (status: BookingStatus) => {
     switch (status) {
+      case 'Pending':
+        return {
+          bg: 'rgba(234, 179, 8, 0.15)',
+          border: '#EAB308',
+          text: '#EAB308',
+        };
       case 'Confirmed':
         return {
           bg: 'rgba(0, 229, 255, 0.15)',
@@ -68,6 +95,79 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
     }
   };
 
+  const handleCancelBooking = (bookingId: string, amount: number, paymentMethod: string) => {
+    Alert.alert(
+      'Cancel Booking?',
+      `Are you sure you want to cancel booking ${bookingId}? Full refund of $${amount} will be returned to your ${paymentMethod}.`,
+      [
+        { text: 'Keep Booking', style: 'cancel' },
+        {
+          text: 'Confirm Cancellation',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await cancelBooking(bookingId);
+            if (success) {
+              Alert.alert('Booking Cancelled', 'Your reservation was cancelled successfully.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderEmptyState = () => {
+    switch (activeTab) {
+      case 'active':
+        return (
+          <EmptyState
+            title="No Active Rentals"
+            message="You don't have any vehicles currently checked out. Browse our fleet to start a rental."
+            actionTitle="Discover Fleet"
+            onAction={() => navigation.navigate('VehicleGallery')}
+            style={{ marginTop: 40 }}
+          />
+        );
+      case 'upcoming':
+        return (
+          <EmptyState
+            title="No Upcoming Bookings"
+            message="You have no confirmed or pending reservations scheduled."
+            actionTitle="Reserve a Car"
+            onAction={() => navigation.navigate('VehicleGallery')}
+            style={{ marginTop: 40 }}
+          />
+        );
+      case 'completed':
+        return (
+          <EmptyState
+            title="No Completed Rentals"
+            message="Your past completed rental receipts and return vouchers will appear here."
+            actionTitle="Find a Vehicle"
+            onAction={() => navigation.navigate('VehicleGallery')}
+            style={{ marginTop: 40 }}
+          />
+        );
+      case 'cancelled':
+        return (
+          <EmptyState
+            title="No Cancelled Bookings"
+            message="You have zero cancelled reservations on file."
+            style={{ marginTop: 40 }}
+          />
+        );
+      default:
+        return (
+          <EmptyState
+            title="No Bookings on File"
+            message="You haven't reserved any vehicles yet. Explore our curated fleet to book your next ride."
+            actionTitle="Discover Fleet"
+            onAction={() => navigation.navigate('VehicleGallery')}
+            style={{ marginTop: 40 }}
+          />
+        );
+    }
+  };
+
   return (
     <ScreenContainer
       scrollable
@@ -80,95 +180,142 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
         />
       }
     >
-      {/* Filter Tabs */}
+      {/* Scrollable Filter Tabs */}
       <View
         style={[
           styles.tabsBar,
           {
             backgroundColor: colors.surface,
             borderBottomColor: colors.border,
-            paddingHorizontal: spacing.md,
-            paddingVertical: spacing.sm,
           },
         ]}
       >
-        <TouchableOpacity
-          onPress={() => setActiveTab('all')}
-          style={[
-            styles.tabBtn,
-            {
-              backgroundColor: activeTab === 'all' ? colors.primary : colors.surfaceVariant,
-              borderRadius: borderRadius.md,
-            },
-          ]}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}
         >
-          <Text
-            style={{
-              color: activeTab === 'all' ? colors.textInverse : colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: '700',
-            }}
+          <TouchableOpacity
+            onPress={() => setActiveTab('all')}
+            style={[
+              styles.tabBtn,
+              {
+                backgroundColor: activeTab === 'all' ? colors.primary : colors.surfaceVariant,
+                borderRadius: borderRadius.md,
+                marginRight: 8,
+              },
+            ]}
           >
-            All ({bookings.length})
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                color: activeTab === 'all' ? colors.textInverse : colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              All ({bookings.length})
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => setActiveTab('upcoming')}
-          style={[
-            styles.tabBtn,
-            {
-              backgroundColor: activeTab === 'upcoming' ? colors.primary : colors.surfaceVariant,
-              borderRadius: borderRadius.md,
-              marginHorizontal: 8,
-            },
-          ]}
-        >
-          <Text
-            style={{
-              color: activeTab === 'upcoming' ? colors.textInverse : colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: '700',
-            }}
+          <TouchableOpacity
+            onPress={() => setActiveTab('active')}
+            style={[
+              styles.tabBtn,
+              {
+                backgroundColor: activeTab === 'active' ? colors.accent : colors.surfaceVariant,
+                borderRadius: borderRadius.md,
+                marginRight: 8,
+              },
+            ]}
           >
-            Active & Upcoming ({bookings.filter(b => b.status === 'Confirmed' || b.status === 'Active').length})
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                color: activeTab === 'active' ? '#0F172A' : colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              Active ({activeCount})
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => setActiveTab('completed')}
-          style={[
-            styles.tabBtn,
-            {
-              backgroundColor: activeTab === 'completed' ? colors.primary : colors.surfaceVariant,
-              borderRadius: borderRadius.md,
-            },
-          ]}
-        >
-          <Text
-            style={{
-              color: activeTab === 'completed' ? colors.textInverse : colors.textSecondary,
-              fontSize: typography.fontSizes.xs,
-              fontWeight: '700',
-            }}
+          <TouchableOpacity
+            onPress={() => setActiveTab('upcoming')}
+            style={[
+              styles.tabBtn,
+              {
+                backgroundColor: activeTab === 'upcoming' ? colors.primary : colors.surfaceVariant,
+                borderRadius: borderRadius.md,
+                marginRight: 8,
+              },
+            ]}
           >
-            Past ({bookings.filter(b => b.status === 'Completed' || b.status === 'Cancelled').length})
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                color: activeTab === 'upcoming' ? colors.textInverse : colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              Upcoming ({upcomingCount})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('completed')}
+            style={[
+              styles.tabBtn,
+              {
+                backgroundColor: activeTab === 'completed' ? colors.primary : colors.surfaceVariant,
+                borderRadius: borderRadius.md,
+                marginRight: 8,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: activeTab === 'completed' ? colors.textInverse : colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              Completed ({completedCount})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab('cancelled')}
+            style={[
+              styles.tabBtn,
+              {
+                backgroundColor: activeTab === 'cancelled' ? colors.danger : colors.surfaceVariant,
+                borderRadius: borderRadius.md,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: activeTab === 'cancelled' ? '#FFFFFF' : colors.textSecondary,
+                fontSize: typography.fontSizes.xs,
+                fontWeight: '700',
+              }}
+            >
+              Cancelled ({cancelledCount})
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
       <ScrollView contentContainerStyle={[styles.content, { padding: spacing.md }]}>
         {filteredBookings.length === 0 ? (
-          <EmptyState
-            title="No Bookings in this View"
-            message="You don't have any reservations matching this filter. Explore our curated fleet to book your next ride."
-            actionTitle="Discover Fleet"
-            onAction={() => navigation.navigate('VehicleGallery')}
-            style={{ marginTop: 40 }}
-          />
+          renderEmptyState()
         ) : (
           filteredBookings.map(item => {
             const badge = getStatusBadgeStyle(item.status);
+            const isEligibleForCancel = item.status === 'Confirmed' || item.status === 'Pending';
+            const isActiveRental = item.status === 'Active';
+            const isCompleted = item.status === 'Completed';
+
             return (
               <Card
                 key={item.id}
@@ -177,7 +324,7 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
                 style={[
                   styles.bookingCard,
                   {
-                    borderColor: colors.border,
+                    borderColor: isActiveRental ? colors.accent : colors.border,
                     backgroundColor: colors.surface,
                     borderRadius: borderRadius.lg,
                     marginBottom: spacing.md,
@@ -248,13 +395,16 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
                       <Text style={{ color: colors.textSecondary, fontSize: typography.fontSizes.xs, marginTop: 2 }}>
                         📅 {item.pickupDate} → {item.returnDate}
                       </Text>
-                      <Text style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs - 1, marginTop: 2 }}>
+                      <Text
+                        numberOfLines={1}
+                        style={{ color: colors.textMuted, fontSize: typography.fontSizes.xs - 1, marginTop: 2 }}
+                      >
                         📍 {item.pickupLocation}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Card Bottom Row: Total & Action */}
+                  {/* Card Bottom Row: Total & Realistic Contextual Actions */}
                   <View
                     style={[
                       styles.cardBottomRow,
@@ -268,7 +418,7 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
                   >
                     <View>
                       <Text style={{ color: colors.textMuted, fontSize: 10, fontWeight: '600' }}>
-                        TOTAL PAID
+                        TOTAL AMOUNT
                       </Text>
                       <Text
                         style={{
@@ -281,22 +431,86 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
                       </Text>
                     </View>
 
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={() => navigation.navigate('BookingDetails', { bookingId: item.id })}
-                      style={[
-                        styles.viewBtn,
-                        {
-                          backgroundColor: 'rgba(0, 229, 255, 0.12)',
-                          borderColor: colors.primary,
-                          borderRadius: borderRadius.sm,
-                        },
-                      ]}
-                    >
-                      <Text style={{ color: colors.primary, fontSize: typography.fontSizes.xs, fontWeight: '700' }}>
-                        VIEW VOUCHER →
-                      </Text>
-                    </TouchableOpacity>
+                    <View style={styles.actionButtonsRow}>
+                      {/* Contextual Action 1 */}
+                      {isActiveRental ? (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => navigation.navigate('ActiveRental', { bookingId: item.id })}
+                          style={[
+                            styles.actionBtn,
+                            {
+                              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                              borderColor: colors.accent,
+                              borderRadius: borderRadius.sm,
+                              marginRight: 6,
+                            },
+                          ]}
+                        >
+                          <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800' }}>
+                            CONTINUE RENTAL →
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {isCompleted ? (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => navigation.navigate('FinalInvoice', { bookingId: item.id })}
+                          style={[
+                            styles.actionBtn,
+                            {
+                              backgroundColor: 'rgba(0, 229, 255, 0.12)',
+                              borderColor: colors.primary,
+                              borderRadius: borderRadius.sm,
+                              marginRight: 6,
+                            },
+                          ]}
+                        >
+                          <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '700' }}>
+                            VIEW INVOICE 🧾
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {isEligibleForCancel ? (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => handleCancelBooking(item.id, item.pricing.total, item.paymentMethod)}
+                          style={[
+                            styles.actionBtn,
+                            {
+                              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                              borderColor: colors.danger,
+                              borderRadius: borderRadius.sm,
+                              marginRight: 6,
+                            },
+                          ]}
+                        >
+                          <Text style={{ color: colors.danger, fontSize: 11, fontWeight: '700' }}>
+                            CANCEL
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {/* Standard View Booking Action */}
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => navigation.navigate('BookingDetails', { bookingId: item.id })}
+                        style={[
+                          styles.actionBtn,
+                          {
+                            backgroundColor: colors.surfaceVariant,
+                            borderColor: colors.border,
+                            borderRadius: borderRadius.sm,
+                          },
+                        ]}
+                      >
+                        <Text style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
+                          DETAILS →
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               </Card>
@@ -310,11 +524,10 @@ export const MyBookingsScreen: React.FC<MyBookingsProps> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   tabsBar: {
-    flexDirection: 'row',
     borderBottomWidth: 1,
   },
   tabBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
   },
   content: {
@@ -348,9 +561,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  viewBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  actionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderWidth: 1,
   },
 });

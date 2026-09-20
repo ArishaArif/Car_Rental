@@ -55,6 +55,7 @@ export const CheckAvailabilityScreen: React.FC<CheckAvailabilityProps> = ({
     } else {
       initDraft(vehicle);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleId]);
 
   if (loading) {
