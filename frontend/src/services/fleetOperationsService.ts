@@ -9,7 +9,6 @@ import {
   MaintenanceStatus,
   ReturnStatus,
 } from '../types';
-import { MOCK_VEHICLES } from './vehicleData';
 import { vehicleService } from './vehicleService';
 
 type FleetChangeListener = () => void;

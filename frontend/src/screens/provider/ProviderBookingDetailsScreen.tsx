@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   Image,
-  ScrollView,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,7 +30,7 @@ interface Props {
 const LIFECYCLE_STEPS: BookingStatus[] = ['Pending', 'Confirmed', 'Active', 'Completed'];
 
 export const ProviderBookingDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, typography, spacing } = useTheme();
   const { bookingId } = route.params;
   const {
     bookings,
@@ -77,7 +75,6 @@ export const ProviderBookingDetailsScreen: React.FC<Props> = ({ navigation, rout
     }
   };
 
-  const statusColor = getStatusColor(booking.status);
   const currentStepIndex = LIFECYCLE_STEPS.indexOf(booking.status);
 
   const handleApprove = async () => {

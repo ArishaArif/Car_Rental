@@ -97,7 +97,7 @@ class AIService implements AIServiceInterface {
    */
   public async sendMessage(text: string, language: LanguageMode = 'English'): Promise<ChatMessage> {
     // Simulate network processing delay for realistic AI feel
-    await new Promise(resolve => setTimeout(resolve, 850));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 850));
 
     const query = text.toLowerCase().trim();
     const allVehicles = await vehicleService.getAllVehicles(false);

@@ -165,6 +165,44 @@ export const ReturnVehicleScreen: React.FC<ReturnVehicleProps> = ({
           </View>
         </Card>
 
+        {/* AI Damage Inspection Fast-Track Banner */}
+        <Card
+          variant="outlined"
+          padding="medium"
+          style={{
+            marginTop: spacing.md,
+            backgroundColor: colors.primary + '0A',
+            borderColor: colors.primary,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 16 }}>🤖</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '800' }}>
+                  AI Computer Vision Inspection
+                </Text>
+              </View>
+              <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 4, lineHeight: 16 }}>
+                Perform automated 6-angle photo inspection with instant damage assessment and repair estimation.
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AIDamageInspection', { bookingId: booking.id, vehicleId: booking.vehicleId })}
+              style={{
+                backgroundColor: colors.primary,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: borderRadius.md,
+              }}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>
+                Start AI Scan
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
+
         {/* Drop-off Mobility Hub Selector */}
         <Text
           style={[

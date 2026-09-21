@@ -13,7 +13,7 @@ import { RouteProp } from '@react-navigation/native';
 import { Booking, BookingStatus, ProviderStackParamList } from '../../types';
 import { useTheme } from '../../theme';
 import { useBooking } from '../../context/BookingContext';
-import { ScreenContainer, Header, Card, Button, EmptyState } from '../../components/common';
+import { ScreenContainer, Header, Card, EmptyState } from '../../components/common';
 
 type ProviderBookingsNavProp = NativeStackNavigationProp<
   ProviderStackParamList,

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, Alert, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ProviderStackParamList, PricingRule } from '../../types';
+import { ProviderStackParamList, PricingRule, VehiclePricingMetrics } from '../../types';
 import { useTheme } from '../../theme';
 import { ScreenContainer, Header, Card, Input, Button } from '../../components/common';
+import { smartPricingService } from '../../services/smartPricingService';
 
 type SmartPricingNavProp = NativeStackNavigationProp<
   ProviderStackParamList,
@@ -23,6 +24,20 @@ export const SmartPricingScreen: React.FC<Props> = ({ navigation }) => {
   const [weeklyDiscount, setWeeklyDiscount] = useState('12');
   const [minDays, setMinDays] = useState('2');
   const [isSaving, setIsSaving] = useState(false);
+  const [pricingList, setPricingList] = useState<VehiclePricingMetrics[]>([]);
+
+  const loadPricing = async () => {
+    try {
+      const data = await smartPricingService.getAllFleetPricingMetrics();
+      setPricingList(data);
+    } catch (err) {
+      console.warn('Could not load fleet pricing metrics', err);
+    }
+  };
+
+  useEffect(() => {
+    loadPricing();
+  }, []);
 
   const [rules, setRules] = useState<PricingRule[]>([
     {
@@ -248,6 +263,83 @@ export const SmartPricingScreen: React.FC<Props> = ({ navigation }) => {
                 trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor="#FFFFFF"
               />
+            </View>
+          </Card>
+        ))}
+
+        {/* Fleet Dynamic Yield Recommendations */}
+        <Text
+          style={[
+            styles.sectionHeading,
+            {
+              color: colors.textPrimary,
+              fontSize: typography.fontSizes.md,
+              fontWeight: typography.fontWeights.bold,
+              marginTop: spacing.lg,
+              marginBottom: 8,
+            },
+          ]}
+        >
+          Vehicle Pricing Recommendations ({pricingList.length})
+        </Text>
+
+        {pricingList.map(item => (
+          <Card
+            key={item.vehicleId}
+            variant="outlined"
+            padding="medium"
+            style={{ marginBottom: 10 }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
+                  {item.vehicleName}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+                  Demand: {item.demandLevel} • Utilization: {item.utilizationRate}%
+                </Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 10 }}>Current: PKR {item.currentPrice.toLocaleString()}</Text>
+                <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '900' }}>
+                  PKR {item.recommendedPrice.toLocaleString()}/d
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('VehiclePricingAnalysis', { vehicleId: item.vehicleId })}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: borderRadius.sm,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
+                  Analyze Signals 📊
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={async () => {
+                  await smartPricingService.acceptRecommendation(item.vehicleId, item.recommendedPrice);
+                  Alert.alert('Price Updated', `${item.vehicleName} daily rate updated to PKR ${item.recommendedPrice.toLocaleString()}.`);
+                  loadPricing();
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: borderRadius.sm,
+                  backgroundColor: colors.primary,
+                }}
+              >
+                <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}>
+                  Accept Rate ✓
+                </Text>
+              </TouchableOpacity>
             </View>
           </Card>
         ))}

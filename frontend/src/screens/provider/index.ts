@@ -9,4 +9,6 @@ export * from './ProviderBookingDetailsScreen';
 export * from './RevenueDashboardScreen';
 export * from './RevenueReportsScreen';
 export * from './SmartPricingScreen';
+export * from './VehiclePricingAnalysisScreen';
 export * from './ProviderProfileScreen';
+

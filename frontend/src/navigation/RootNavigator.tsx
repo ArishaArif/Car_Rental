@@ -46,6 +46,9 @@ import {
   ReturnInspectionScreen,
   ReturnConfirmationScreen,
   FinalInvoiceScreen,
+  AIAssistantScreen,
+  AIDamageInspectionScreen,
+  AIDamageReportScreen,
   CustomerProfileScreen,
   EditProfileScreen,
   CustomerSettingsScreen,
@@ -62,6 +65,7 @@ import {
   RevenueDashboardScreen,
   RevenueReportsScreen,
   SmartPricingScreen,
+  VehiclePricingAnalysisScreen,
   ProviderProfileScreen,
 } from '../screens/provider';
 import {
@@ -137,6 +141,9 @@ const CustomerNavigator: React.FC = () => (
     <CustomerStack.Screen name="ReturnInspection" component={ReturnInspectionScreen} />
     <CustomerStack.Screen name="ReturnConfirmation" component={ReturnConfirmationScreen} />
     <CustomerStack.Screen name="FinalInvoice" component={FinalInvoiceScreen} />
+    <CustomerStack.Screen name="AIAssistant" component={AIAssistantScreen} />
+    <CustomerStack.Screen name="AIDamageInspection" component={AIDamageInspectionScreen} />
+    <CustomerStack.Screen name="AIDamageReport" component={AIDamageReportScreen} />
     <CustomerStack.Screen name="CustomerProfile" component={CustomerProfileScreen} />
     <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} />
     <CustomerStack.Screen name="CustomerSettings" component={CustomerSettingsScreen} />
@@ -165,6 +172,7 @@ const ProviderNavigator: React.FC = () => (
     <ProviderStack.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
     <ProviderStack.Screen name="RevenueReports" component={RevenueReportsScreen} />
     <ProviderStack.Screen name="SmartPricing" component={SmartPricingScreen} />
+    <ProviderStack.Screen name="VehiclePricingAnalysis" component={VehiclePricingAnalysisScreen} />
     <ProviderStack.Screen name="ProviderProfile" component={ProviderProfileScreen} />
   </ProviderStack.Navigator>
 );

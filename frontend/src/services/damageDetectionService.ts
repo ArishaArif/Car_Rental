@@ -1,6 +1,5 @@
 import {
   CapturedPhoto,
-  DamageFinding,
   InspectionAnalysisResult,
   PhotoCategory,
 } from '../types';
@@ -69,7 +68,7 @@ class DamageDetectionService implements DamageDetectionServiceInterface {
     presetScenario: 'Clean' | 'MinorDamage' | 'ModerateDamage' | 'SevereDamage' = 'MinorDamage'
   ): Promise<InspectionAnalysisResult> {
     // Realistic AI scanning pipeline delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 1500));
 
     return this.generateMockAnalysis(bookingId, vehicleId, presetScenario);
   }

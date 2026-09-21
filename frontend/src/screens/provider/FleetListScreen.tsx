@@ -82,17 +82,6 @@ export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleArchive = (vehicle: Vehicle) => {
-    Alert.alert(
-      'Archive Vehicle',
-      `Are you sure you want to archive ${vehicle.brand} ${vehicle.model}? It will be withdrawn from discovery.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Archive', style: 'destructive', onPress: () => archiveVehicle(vehicle.id) },
-      ]
-    );
-  };
-
   const renderVehicleItem = ({ item }: { item: Vehicle }) => {
     const badge = getStatusBadgeStyle(item.availability);
     const isPublished = item.isPublished !== false && item.availability !== 'Archived';

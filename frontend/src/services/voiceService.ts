@@ -118,7 +118,7 @@ class VoiceService implements VoiceServiceInterface {
 
     if (this.currentState === 'Listening') {
       this.updateState('Processing');
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 600));
       this.updateState('Responding');
       this.activeCallbacks?.onFinalTranscription?.(this.currentTranscription);
       setTimeout(() => {

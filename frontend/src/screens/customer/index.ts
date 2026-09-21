@@ -11,3 +11,7 @@ export * from './FinalInvoiceScreen';
 export * from './booking';
 export * from './return';
 export * from './profile';
+export * from './ai/AIAssistantScreen';
+export * from './inspection/AIDamageInspectionScreen';
+export * from './inspection/AIDamageReportScreen';
+

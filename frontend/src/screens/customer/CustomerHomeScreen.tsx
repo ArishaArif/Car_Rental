@@ -102,6 +102,23 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
         </TouchableOpacity>
 
         <View style={styles.headerActions}>
+          {/* AI Assistant Shortcut */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('AIAssistant')}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: colors.primary + '18',
+                borderColor: colors.primary,
+                borderRadius: borderRadius.md,
+                marginRight: 6,
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 18 }}>🤖</Text>
+          </TouchableOpacity>
+
           {/* Favorites Shortcut with Badge */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -250,6 +267,88 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* AI Assistant & Voice Concierge Banner */}
+        <TouchableOpacity
+          activeOpacity={0.88}
+          onPress={() => navigation.navigate('AIAssistant')}
+          style={{
+            backgroundColor: colors.surface,
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            borderRadius: borderRadius.lg,
+            padding: spacing.md,
+            marginTop: spacing.md,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 6,
+            elevation: 3,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  backgroundColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 20 }}>🤖</Text>
+              </View>
+              <View>
+                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
+                  AI Rental Assistant & Voice Concierge
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+                  Chat or speak in English, Urdu or Roman Urdu
+                </Text>
+              </View>
+            </View>
+            <View
+              style={{
+                backgroundColor: colors.primary + '18',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: borderRadius.full,
+              }}
+            >
+              <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '700' }}>
+                Open Chat ➔
+              </Text>
+            </View>
+          </View>
+
+          {/* Quick AI Prompts */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {[
+              'I need an SUV this weekend',
+              '3 din ke liye car chahiye',
+              'Mujhe Islamabad mein Corolla chahiye',
+            ].map((prompt, idx) => (
+              <TouchableOpacity
+                key={`p-${idx}`}
+                onPress={() => navigation.navigate('AIAssistant', { initialQuery: prompt })}
+                style={{
+                  backgroundColor: colors.background,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: borderRadius.sm,
+                }}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 10, fontWeight: '600' }}>
+                  💬 "{prompt}"
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
 
         {/* Hero Search Box */}
         <Card
