@@ -92,7 +92,8 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
       initialQueryExecuted.current = true;
       handleSendMessage(initialQ, false);
     }
-  }, [language, handleSendMessage, route.params?.initialQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, route.params?.initialQuery]);
 
   const handleSelectVehicle = (vehicleId: string) => {
     // Navigates directly into the existing CarDetails screen and from there into the existing booking flow!
