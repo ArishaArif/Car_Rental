@@ -4,6 +4,7 @@ import { ThemeProvider } from './src/theme';
 import { AuthProvider } from './src/context/AuthContext';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { BookingProvider } from './src/context/BookingContext';
+import { FleetProvider } from './src/context/FleetContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 function App() {
@@ -12,9 +13,11 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <FavoritesProvider>
-            <BookingProvider>
-              <RootNavigator />
-            </BookingProvider>
+            <FleetProvider>
+              <BookingProvider>
+                <RootNavigator />
+              </BookingProvider>
+            </FleetProvider>
           </FavoritesProvider>
         </AuthProvider>
       </ThemeProvider>

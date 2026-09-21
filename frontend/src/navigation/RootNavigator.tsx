@@ -5,6 +5,7 @@ import {
   AuthStackParamList,
   CustomerStackParamList,
   ProviderStackParamList,
+  FleetManagerStackParamList,
   AdminStackParamList,
 } from '../types';
 import { useTheme } from '../theme';
@@ -21,10 +22,7 @@ import {
   ResetPasswordScreen,
   ProfileSetupScreen,
 } from '../screens/auth';
-import {
-  ProviderPlaceholderScreen,
-  AdminPlaceholderScreen,
-} from '../screens/placeholders';
+import { AdminPlaceholderScreen } from '../screens/placeholders';
 import {
   CustomerHomeScreen,
   SearchCarsScreen,
@@ -52,6 +50,36 @@ import {
   EditProfileScreen,
   CustomerSettingsScreen,
 } from '../screens/customer';
+import {
+  ProviderDashboardScreen,
+  FleetListScreen,
+  VehicleDetailsScreen,
+  AddVehicleScreen,
+  EditVehicleScreen,
+  VehicleAvailabilityScreen,
+  ProviderBookingsScreen,
+  ProviderBookingDetailsScreen,
+  RevenueDashboardScreen,
+  RevenueReportsScreen,
+  SmartPricingScreen,
+  ProviderProfileScreen,
+} from '../screens/provider';
+import {
+  FleetManagerDashboardScreen,
+  FleetManagerFleetScreen,
+  FleetManagerVehicleDetailsScreen,
+  FleetMaintenanceScreen,
+  ScheduleMaintenanceScreen,
+  FleetInspectionsScreen,
+  NewInspectionScreen,
+  ActiveRentalsScreen,
+  FleetReturnsScreen,
+  ProcessReturnScreen,
+  DamageReportsScreen,
+  NewDamageReportScreen,
+  FleetTasksScreen,
+  FleetManagerProfileScreen,
+} from '../screens/fleetManager';
 
 // Auth Stack Navigator
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -120,13 +148,95 @@ const ProviderStack = createNativeStackNavigator<ProviderStackParamList>();
 
 const ProviderNavigator: React.FC = () => (
   <ProviderStack.Navigator
+    initialRouteName="ProviderDashboard"
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
     }}
   >
-    <ProviderStack.Screen name="ProviderDashboard" component={ProviderPlaceholderScreen} />
+    <ProviderStack.Screen name="ProviderDashboard" component={ProviderDashboardScreen} />
+    <ProviderStack.Screen name="FleetList" component={FleetListScreen} />
+    <ProviderStack.Screen name="VehicleDetails" component={VehicleDetailsScreen} />
+    <ProviderStack.Screen name="AddVehicle" component={AddVehicleScreen} />
+    <ProviderStack.Screen name="EditVehicle" component={EditVehicleScreen} />
+    <ProviderStack.Screen name="VehicleAvailability" component={VehicleAvailabilityScreen} />
+    <ProviderStack.Screen name="ProviderBookings" component={ProviderBookingsScreen} />
+    <ProviderStack.Screen name="ProviderBookingDetails" component={ProviderBookingDetailsScreen} />
+    <ProviderStack.Screen name="RevenueDashboard" component={RevenueDashboardScreen} />
+    <ProviderStack.Screen name="RevenueReports" component={RevenueReportsScreen} />
+    <ProviderStack.Screen name="SmartPricing" component={SmartPricingScreen} />
+    <ProviderStack.Screen name="ProviderProfile" component={ProviderProfileScreen} />
   </ProviderStack.Navigator>
+);
+
+// Fleet Manager Stack Navigator
+const FleetManagerStack = createNativeStackNavigator<FleetManagerStackParamList>();
+
+const FleetManagerNavigator: React.FC = () => (
+  <FleetManagerStack.Navigator
+    initialRouteName="FleetManagerDashboard"
+    screenOptions={{
+      headerShown: false,
+      animation: 'slide_from_right',
+    }}
+  >
+    <FleetManagerStack.Screen
+      name="FleetManagerDashboard"
+      component={FleetManagerDashboardScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetManagerFleet"
+      component={FleetManagerFleetScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetManagerVehicleDetails"
+      component={FleetManagerVehicleDetailsScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetMaintenance"
+      component={FleetMaintenanceScreen}
+    />
+    <FleetManagerStack.Screen
+      name="ScheduleMaintenance"
+      component={ScheduleMaintenanceScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetInspections"
+      component={FleetInspectionsScreen}
+    />
+    <FleetManagerStack.Screen
+      name="NewInspection"
+      component={NewInspectionScreen}
+    />
+    <FleetManagerStack.Screen
+      name="ActiveRentals"
+      component={ActiveRentalsScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetReturns"
+      component={FleetReturnsScreen}
+    />
+    <FleetManagerStack.Screen
+      name="ProcessReturn"
+      component={ProcessReturnScreen}
+    />
+    <FleetManagerStack.Screen
+      name="DamageReports"
+      component={DamageReportsScreen}
+    />
+    <FleetManagerStack.Screen
+      name="NewDamageReport"
+      component={NewDamageReportScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetTasks"
+      component={FleetTasksScreen}
+    />
+    <FleetManagerStack.Screen
+      name="FleetManagerProfile"
+      component={FleetManagerProfileScreen}
+    />
+  </FleetManagerStack.Navigator>
 );
 
 // Admin Stack Navigator
@@ -158,6 +268,8 @@ export const RootNavigator: React.FC = () => {
     switch (activeRole) {
       case 'Provider':
         return <ProviderNavigator />;
+      case 'FleetManager':
+        return <FleetManagerNavigator />;
       case 'Admin':
         return <AdminNavigator />;
       case 'Customer':

@@ -42,6 +42,14 @@ const ROLE_OPTIONS: RoleOption[] = [
     perks: ['Real-time telematics', 'Automated payouts & yield', 'Fleet maintenance logs'],
   },
   {
+    role: 'FleetManager',
+    badge: 'FLEET OPERATIONS',
+    icon: '🛠️',
+    title: 'Fleet Manager',
+    subtitle: 'Manage maintenance, vehicle inspections, returns desk, and daily dispatch.',
+    perks: ['Service & inspection checklists', 'Live returns processing', 'Operational task tracking'],
+  },
+  {
     role: 'Admin',
     badge: 'SYSTEM CONTROL',
     icon: '🛡️',

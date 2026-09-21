@@ -47,6 +47,20 @@ export const DEMO_USERS: Record<UserRole, { email: string; pass: string; user: A
       fleetSize: '24 Vehicles',
     },
   },
+  FleetManager: {
+    email: 'fleet@carrental.com',
+    pass: 'password123',
+    user: {
+      id: 'fleet-401',
+      name: 'Marcus Chen',
+      email: 'fleet@carrental.com',
+      phone: '+1 (555) 345-6789',
+      role: 'FleetManager',
+      isProfileComplete: true,
+      city: 'Austin, TX',
+      department: 'Fleet Operations',
+    },
+  },
   Admin: {
     email: 'admin@carrental.com',
     pass: 'password123',

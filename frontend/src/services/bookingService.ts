@@ -4,15 +4,78 @@ import {
   BookingDraft,
   BookingInvoice,
   BookingPricing,
+  BookingStatus,
   PaymentMethod,
   VehicleInspection,
 } from '../types';
 import { MOCK_VEHICLES } from './vehicleData';
+import { vehicleService } from './vehicleService';
+
+export interface TopVehicleMetric {
+  id: string;
+  brand: string;
+  model: string;
+  category: string;
+  image: string;
+  tripsCount: number;
+  revenue: number;
+}
+
+export interface RevenueMetrics {
+  dailyRevenue: number;
+  weeklyRevenue: number;
+  monthlyRevenue: number;
+  totalRevenue: number;
+  completedRentalsCount: number;
+  cancelledBookingsCount: number;
+  activeRentalsCount: number;
+  pendingBookingsCount: number;
+  cancellationRate: number;
+  topVehicles: TopVehicleMetric[];
+  revenueByCategory: { category: string; amount: number; percentage: number }[];
+  weeklyTrend: { day: string; amount: number }[];
+}
+
+type BookingChangeListener = (bookings: Booking[]) => void;
 
 /**
  * Pre-seeded mock bookings for realistic prototype experience
  */
 const INITIAL_MOCK_BOOKINGS: Booking[] = [
+  {
+    id: 'VLX-BK-34901',
+    vehicleId: 'veh-civic-02',
+    vehicle: MOCK_VEHICLES[1], // Honda Civic Touring
+    pickupDate: '2026-09-24',
+    pickupTime: '11:00 AM',
+    returnDate: '2026-09-28',
+    returnTime: '11:00 AM',
+    rentalDays: 4,
+    pickupLocation: 'Downtown Tech District Hub',
+    returnLocation: 'Downtown Tech District Hub',
+    pricing: {
+      dailyPrice: 62,
+      rentalDays: 4,
+      subtotal: 248,
+      serviceFee: 25,
+      taxes: 12,
+      securityDeposit: 150,
+      total: 435,
+    },
+    customer: {
+      fullName: 'Sarah Jenkins',
+      phone: '+1 (555) 432-8765',
+      email: 's.jenkins@enterprise.io',
+      licenseNumber: 'DL-CA-2022-8192',
+      notes: 'Requires flight delay flexibility.',
+    },
+    paymentMethod: 'Card',
+    paymentStatus: 'Paid',
+    status: 'Pending',
+    createdAt: '2026-09-21T08:30:00.000Z',
+    pickupCode: '1849',
+    pickupMileage: 18200,
+  },
   {
     id: 'VLX-BK-91823',
     vehicleId: 'veh-tucson-04',
@@ -138,10 +201,61 @@ const INITIAL_MOCK_BOOKINGS: Booking[] = [
       paymentStatus: 'Paid',
     },
   },
+  {
+    id: 'VLX-BK-11042',
+    vehicleId: 'veh-fortuner-06',
+    vehicle: MOCK_VEHICLES[5], // Toyota Fortuner
+    pickupDate: '2026-09-05',
+    pickupTime: '08:00 AM',
+    returnDate: '2026-09-08',
+    returnTime: '08:00 PM',
+    rentalDays: 3,
+    pickupLocation: 'Grand Plaza Fleet Depot',
+    returnLocation: 'Grand Plaza Fleet Depot',
+    pricing: {
+      dailyPrice: 125,
+      rentalDays: 3,
+      subtotal: 375,
+      serviceFee: 38,
+      taxes: 19,
+      securityDeposit: 200,
+      total: 632,
+    },
+    customer: {
+      fullName: 'David Ross',
+      phone: '+1 (555) 901-4433',
+      email: 'd.ross@adventures.net',
+      licenseNumber: 'DL-TX-2020-4109',
+    },
+    paymentMethod: 'Card',
+    paymentStatus: 'Failed',
+    status: 'Cancelled',
+    createdAt: '2026-09-04T12:00:00.000Z',
+    pickupCode: '9041',
+  },
 ];
 
 class BookingService {
   private bookings: Booking[] = [...INITIAL_MOCK_BOOKINGS];
+  private listeners: BookingChangeListener[] = [];
+
+  public subscribe(listener: BookingChangeListener): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    const copy = [...this.bookings];
+    this.listeners.forEach(listener => {
+      try {
+        listener(copy);
+      } catch (err) {
+        console.warn('Error in booking listener', err);
+      }
+    });
+  }
 
   /**
    * Calculate standard itemized pricing for a rental duration
@@ -149,8 +263,8 @@ class BookingService {
   public calculatePricing(dailyPrice: number, days: number): BookingPricing {
     const rentalDays = Math.max(1, days);
     const subtotal = dailyPrice * rentalDays;
-    const serviceFee = Math.round(subtotal * 0.10); // 10% platform & roadside fee
-    const taxes = Math.round(subtotal * 0.05); // 5% provincial/state sales tax
+    const serviceFee = Math.round(subtotal * 0.1); // 10% platform & roadside fee
+    const taxes = Math.round(subtotal * 0.05); // 5% sales tax
     const securityDeposit = 150; // Refundable deposit
     const total = subtotal + serviceFee + taxes + securityDeposit;
 
@@ -176,7 +290,6 @@ class BookingService {
     const { subtotal, serviceFee, taxes, securityDeposit } = booking.pricing;
     const totalCharges = lateCharges + damageCharges;
     const depositRefund = Math.max(0, securityDeposit - totalCharges);
-    // Final billed amount for rental + any extra penalty charges
     const finalAmount = subtotal + serviceFee + taxes + totalCharges;
 
     return {
@@ -223,23 +336,98 @@ class BookingService {
    * Activate a confirmed booking (when customer starts rental / picks up vehicle)
    */
   public async activateBooking(id: string): Promise<Booking | undefined> {
-    const idx = this.bookings.findIndex(b => b.id === id);
-    if (idx !== -1) {
-      this.bookings[idx] = {
-        ...this.bookings[idx],
-        status: 'Active',
-      };
-      return this.bookings[idx];
-    }
-    return undefined;
+    return this.startRental(id);
   }
 
   /**
-   * Complete vehicle return, perform inspection and issue invoice
+   * Provider: Approve a Pending booking
    */
-  public async completeReturn(
+  public async approveBooking(id: string): Promise<Booking> {
+    const idx = this.bookings.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error(`Booking with ID ${id} not found`);
+
+    this.bookings[idx] = {
+      ...this.bookings[idx],
+      status: 'Confirmed',
+    };
+
+    // Update vehicle availability to Booked
+    await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Booked');
+
+    this.notifyListeners();
+    return this.bookings[idx];
+  }
+
+  /**
+   * Provider: Reject a Pending booking
+   */
+  public async rejectBooking(id: string, reason?: string): Promise<Booking> {
+    const idx = this.bookings.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error(`Booking with ID ${id} not found`);
+
+    this.bookings[idx] = {
+      ...this.bookings[idx],
+      status: 'Cancelled',
+      customer: {
+        ...this.bookings[idx].customer,
+        notes: reason
+          ? `${this.bookings[idx].customer.notes || ''} [Rejected: ${reason}]`.trim()
+          : this.bookings[idx].customer.notes,
+      },
+    };
+
+    // Release vehicle back to Available
+    await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Available');
+
+    this.notifyListeners();
+    return this.bookings[idx];
+  }
+
+  /**
+   * Provider: Mark vehicle ready for customer handover
+   */
+  public async markReady(id: string): Promise<Booking> {
+    const idx = this.bookings.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error(`Booking with ID ${id} not found`);
+
+    this.bookings[idx] = {
+      ...this.bookings[idx],
+      customer: {
+        ...this.bookings[idx].customer,
+        notes: `${this.bookings[idx].customer.notes || ''} [Vehicle Prepped & Ready at Hub]`.trim(),
+      },
+    };
+
+    this.notifyListeners();
+    return this.bookings[idx];
+  }
+
+  /**
+   * Provider: Start Rental (transition Confirmed -> Active)
+   */
+  public async startRental(id: string): Promise<Booking> {
+    const idx = this.bookings.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error(`Booking with ID ${id} not found`);
+
+    this.bookings[idx] = {
+      ...this.bookings[idx],
+      status: 'Active',
+      pickupMileage: this.bookings[idx].pickupMileage || 15000,
+    };
+
+    // Synchronize vehicle availability to Active Rental
+    await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Active Rental');
+
+    this.notifyListeners();
+    return this.bookings[idx];
+  }
+
+  /**
+   * Provider / Customer: Complete vehicle return and finalize rental
+   */
+  public async completeRental(
     bookingId: string,
-    inspection: VehicleInspection,
+    inspection?: VehicleInspection,
     lateCharges: number = 0,
     damageCharges: number = 0
   ): Promise<{ booking: Booking; invoice: BookingInvoice }> {
@@ -251,21 +439,71 @@ class BookingService {
     const currentBooking = this.bookings[idx];
     const invoice = this.generateInvoice(currentBooking, lateCharges, damageCharges);
 
+    const defaultInspection: VehicleInspection = inspection || {
+      exteriorCondition: 'Good',
+      interiorCondition: 'Clean',
+      fuelLevel: 100,
+      odometerReading: (currentBooking.pickupMileage || 15000) + 180,
+      inspectionPassed: true,
+      inspectedAt: new Date().toISOString(),
+      generalNotes: 'Provider completion check verified.',
+    };
+
     const completedBooking: Booking = {
       ...currentBooking,
       status: 'Completed',
-      inspection,
+      inspection: defaultInspection,
       invoice,
-      dropoffMileage: inspection.odometerReading,
-      dropoffFuel: inspection.fuelLevel,
+      dropoffMileage: defaultInspection.odometerReading,
+      dropoffFuel: defaultInspection.fuelLevel,
     };
 
     this.bookings[idx] = completedBooking;
 
+    // Reset vehicle availability back to Available in shared fleet
+    await vehicleService.updateAvailability(currentBooking.vehicleId, 'Available');
+
+    this.notifyListeners();
     return {
       booking: completedBooking,
       invoice,
     };
+  }
+
+  /**
+   * Generic status update with vehicle synchronization
+   */
+  public async updateBookingStatus(id: string, status: BookingStatus): Promise<Booking> {
+    const idx = this.bookings.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error(`Booking with ID ${id} not found`);
+
+    this.bookings[idx] = {
+      ...this.bookings[idx],
+      status,
+    };
+
+    if (status === 'Active') {
+      await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Active Rental');
+    } else if (status === 'Completed' || status === 'Cancelled') {
+      await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Available');
+    } else if (status === 'Confirmed') {
+      await vehicleService.updateAvailability(this.bookings[idx].vehicleId, 'Booked');
+    }
+
+    this.notifyListeners();
+    return this.bookings[idx];
+  }
+
+  /**
+   * Complete vehicle return, perform inspection and issue invoice
+   */
+  public async completeReturn(
+    bookingId: string,
+    inspection: VehicleInspection,
+    lateCharges: number = 0,
+    damageCharges: number = 0
+  ): Promise<{ booking: Booking; invoice: BookingInvoice }> {
+    return this.completeRental(bookingId, inspection, lateCharges, damageCharges);
   }
 
   /**
@@ -315,11 +553,14 @@ class BookingService {
       status: 'Confirmed',
       createdAt: new Date().toISOString(),
       pickupCode: pickupPin,
-      pickupMileage: 12500,
+      pickupMileage: draft.vehicle.mileage || 12500,
     };
 
-    // Store at beginning of array for immediate visibility
+    // Mark vehicle booked
+    await vehicleService.updateAvailability(draft.vehicle.id, 'Booked');
+
     this.bookings = [newBooking, ...this.bookings];
+    this.notifyListeners();
     return newBooking;
   }
 
@@ -329,15 +570,125 @@ class BookingService {
   public async cancelBooking(id: string): Promise<boolean> {
     const idx = this.bookings.findIndex(b => b.id === id);
     if (idx !== -1) {
+      const vehicleId = this.bookings[idx].vehicleId;
       this.bookings[idx] = {
         ...this.bookings[idx],
         status: 'Cancelled',
       };
+      await vehicleService.updateAvailability(vehicleId, 'Available');
+      this.notifyListeners();
       return true;
     }
     return false;
   }
+
+  /**
+   * Compute comprehensive financial and operational reports
+   */
+  public getRevenueMetrics(): RevenueMetrics {
+    const completed = this.bookings.filter(b => b.status === 'Completed');
+    const active = this.bookings.filter(b => b.status === 'Active');
+    const confirmed = this.bookings.filter(b => b.status === 'Confirmed');
+    const pending = this.bookings.filter(b => b.status === 'Pending');
+    const cancelled = this.bookings.filter(b => b.status === 'Cancelled');
+
+    // Revenue totals
+    const completedTotal = completed.reduce((sum, b) => sum + (b.invoice?.finalAmount || b.pricing.subtotal), 0);
+    const activeTotal = active.reduce((sum, b) => sum + b.pricing.subtotal, 0);
+    const confirmedTotal = confirmed.reduce((sum, b) => sum + b.pricing.subtotal, 0);
+
+    const totalRevenue = completedTotal + activeTotal + confirmedTotal;
+    const monthlyRevenue = Math.round(totalRevenue * 0.85);
+    const weeklyRevenue = Math.round(totalRevenue * 0.28);
+    const dailyRevenue = Math.round(weeklyRevenue / 7);
+
+    const totalOrders = this.bookings.length;
+    const cancellationRate = totalOrders > 0 ? Math.round((cancelled.length / totalOrders) * 100) : 0;
+
+    // Top vehicles aggregated
+    const vehicleMap = new Map<string, { brand: string; model: string; category: string; image: string; trips: number; revenue: number }>();
+
+    this.bookings.forEach(b => {
+      const vid = b.vehicleId;
+      const amount = b.invoice?.finalAmount || b.pricing.subtotal;
+      const isCountable = b.status === 'Completed' || b.status === 'Active' || b.status === 'Confirmed';
+      if (!vehicleMap.has(vid)) {
+        vehicleMap.set(vid, {
+          brand: b.vehicle.brand,
+          model: b.vehicle.model,
+          category: b.vehicle.category,
+          image: b.vehicle.image,
+          trips: isCountable ? 1 : 0,
+          revenue: isCountable ? amount : 0,
+        });
+      } else {
+        const item = vehicleMap.get(vid)!;
+        if (isCountable) {
+          item.trips += 1;
+          item.revenue += amount;
+        }
+      }
+    });
+
+    const topVehicles: TopVehicleMetric[] = Array.from(vehicleMap.entries())
+      .map(([id, data]) => ({
+        id,
+        brand: data.brand,
+        model: data.model,
+        category: data.category,
+        image: data.image,
+        tripsCount: data.trips,
+        revenue: data.revenue,
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Revenue by category breakdown
+    const categoryTotals: Record<string, number> = {
+      Luxury: 0,
+      SUV: 0,
+      Sedan: 0,
+      Economy: 0,
+    };
+
+    this.bookings.forEach(b => {
+      if (b.status === 'Completed' || b.status === 'Active' || b.status === 'Confirmed') {
+        const cat = b.vehicle.category;
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + (b.invoice?.finalAmount || b.pricing.subtotal);
+      }
+    });
+
+    const revenueByCategory = Object.keys(categoryTotals).map(cat => ({
+      category: cat,
+      amount: categoryTotals[cat],
+      percentage: totalRevenue > 0 ? Math.round((categoryTotals[cat] / totalRevenue) * 100) : 0,
+    }));
+
+    // Weekly trend (simulated last 7 days)
+    const weeklyTrend = [
+      { day: 'Mon', amount: Math.round(dailyRevenue * 0.85) },
+      { day: 'Tue', amount: Math.round(dailyRevenue * 0.92) },
+      { day: 'Wed', amount: Math.round(dailyRevenue * 1.05) },
+      { day: 'Thu', amount: Math.round(dailyRevenue * 1.15) },
+      { day: 'Fri', amount: Math.round(dailyRevenue * 1.45) },
+      { day: 'Sat', amount: Math.round(dailyRevenue * 1.6) },
+      { day: 'Sun', amount: Math.round(dailyRevenue * 1.3) },
+    ];
+
+    return {
+      dailyRevenue,
+      weeklyRevenue,
+      monthlyRevenue,
+      totalRevenue,
+      completedRentalsCount: completed.length,
+      cancelledBookingsCount: cancelled.length,
+      activeRentalsCount: active.length,
+      pendingBookingsCount: pending.length,
+      cancellationRate,
+      topVehicles,
+      revenueByCategory,
+      weeklyTrend,
+    };
+  }
 }
 
 export const bookingService = new BookingService();
-

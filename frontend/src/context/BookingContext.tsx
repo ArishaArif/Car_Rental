@@ -4,11 +4,12 @@ import {
   BookingCustomerDetails,
   BookingDraft,
   BookingInvoice,
+  BookingStatus,
   PaymentMethod,
   Vehicle,
   VehicleInspection,
 } from '../types';
-import { bookingService } from '../services/bookingService';
+import { bookingService, RevenueMetrics } from '../services/bookingService';
 
 export interface BookingContextType {
   draft: BookingDraft | null;
@@ -41,6 +42,19 @@ export interface BookingContextType {
     damageCharges?: number
   ) => Promise<{ booking: Booking; invoice: BookingInvoice }>;
   getInvoice: (bookingId: string) => Promise<BookingInvoice | undefined>;
+  // Provider Lifecycle Actions
+  approveBooking: (id: string) => Promise<Booking>;
+  rejectBooking: (id: string, reason?: string) => Promise<Booking>;
+  markReady: (id: string) => Promise<Booking>;
+  startRental: (id: string) => Promise<Booking>;
+  completeRental: (
+    id: string,
+    inspection?: VehicleInspection,
+    lateCharges?: number,
+    damageCharges?: number
+  ) => Promise<{ booking: Booking; invoice: BookingInvoice }>;
+  updateBookingStatus: (id: string, status: BookingStatus) => Promise<Booking>;
+  getRevenueMetrics: () => RevenueMetrics;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -51,6 +65,19 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   useEffect(() => {
     refreshBookings();
+
+    // Subscribe to booking service changes for cross-role reactive updates
+    const unsubscribe = bookingService.subscribe(updatedList => {
+      setBookings(
+        [...updatedList].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const refreshBookings = async () => {
@@ -61,7 +88,6 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
   const activeRental = bookings.find(b => b.status === 'Active');
 
   const initDraft = (vehicle: Vehicle) => {
-    // If draft already has this vehicle, preserve dates/locations
     if (draft && draft.vehicle.id === vehicle.id) {
       return;
     }
@@ -206,6 +232,56 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return bookingService.getInvoiceForBooking(bookingId);
   };
 
+  const approveBooking = async (id: string): Promise<Booking> => {
+    const approved = await bookingService.approveBooking(id);
+    await refreshBookings();
+    return approved;
+  };
+
+  const rejectBooking = async (id: string, reason?: string): Promise<Booking> => {
+    const rejected = await bookingService.rejectBooking(id, reason);
+    await refreshBookings();
+    return rejected;
+  };
+
+  const markReady = async (id: string): Promise<Booking> => {
+    const ready = await bookingService.markReady(id);
+    await refreshBookings();
+    return ready;
+  };
+
+  const startRental = async (id: string): Promise<Booking> => {
+    const active = await bookingService.startRental(id);
+    await refreshBookings();
+    return active;
+  };
+
+  const completeRental = async (
+    id: string,
+    inspection?: VehicleInspection,
+    lateCharges: number = 0,
+    damageCharges: number = 0
+  ): Promise<{ booking: Booking; invoice: BookingInvoice }> => {
+    const result = await bookingService.completeRental(
+      id,
+      inspection,
+      lateCharges,
+      damageCharges
+    );
+    await refreshBookings();
+    return result;
+  };
+
+  const updateBookingStatus = async (id: string, status: BookingStatus): Promise<Booking> => {
+    const updated = await bookingService.updateBookingStatus(id, status);
+    await refreshBookings();
+    return updated;
+  };
+
+  const getRevenueMetrics = (): RevenueMetrics => {
+    return bookingService.getRevenueMetrics();
+  };
+
   return (
     <BookingContext.Provider
       value={{
@@ -224,6 +300,13 @@ export const BookingProvider: React.FC<{ children: ReactNode }> = ({ children })
         activateBooking,
         completeReturn,
         getInvoice,
+        approveBooking,
+        rejectBooking,
+        markReady,
+        startRental,
+        completeRental,
+        updateBookingStatus,
+        getRevenueMetrics,
       }}
     >
       {children}
