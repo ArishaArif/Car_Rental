@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FleetManagerStackParamList } from '../../types';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useFleet } from '../../context/FleetContext';
-import { useBooking } from '../../context/BookingContext';
 import { notificationService } from '../../services/notificationService';
-import { ScreenContainer, Header, Card, Button } from '../../components/common';
+import { ScreenContainer, Header, Card } from '../../components/common';
 
 type FleetManagerDashboardNavProp = NativeStackNavigationProp<
   FleetManagerStackParamList,
@@ -22,7 +21,6 @@ export const FleetManagerDashboardScreen: React.FC<Props> = ({ navigation }) => 
   const { colors, typography, spacing, borderRadius } = useTheme();
   const { user } = useAuth();
   const { getDashboardKPIs, tasks, toggleTask } = useFleet();
-  const { bookings } = useBooking();
 
   const kpis = getDashboardKPIs();
   const pendingTasks = tasks.filter(t => t.status === 'Pending').slice(0, 3);

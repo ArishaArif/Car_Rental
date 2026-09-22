@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, Alert, Switch } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { FleetManagerStackParamList } from '../../types';
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export const ProcessReturnScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, typography, spacing } = useTheme();
   const { returnId } = route.params;
   const { returnsList, processReturn } = useFleet();
   const { bookings, completeRental } = useBooking();

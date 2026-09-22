@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native';
 import { ProviderStackParamList, VehicleAvailability } from '../../types';
 import { useTheme } from '../../theme';
 import { useFleet } from '../../context/FleetContext';
-import { ScreenContainer, Header, Card, Input, Button } from '../../components/common';
+import { ScreenContainer, Header, Input, Button } from '../../components/common';
 
 type VehicleAvailNavProp = NativeStackNavigationProp<
   ProviderStackParamList,

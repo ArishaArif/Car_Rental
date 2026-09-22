@@ -22,8 +22,8 @@ export const FleetTasksScreen: React.FC<Props> = ({ navigation }) => {
   const [filter, setFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskVehicle, setNewTaskVehicle] = useState('Toyota Corolla');
-  const [newTaskPriority, setNewTaskPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
+  const [newTaskVehicle] = useState('Toyota Corolla');
+  const [newTaskPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
 
   const filteredTasks = tasks.filter(t => {
     if (filter === 'All') return true;

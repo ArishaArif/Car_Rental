@@ -59,22 +59,6 @@ export const ProviderBookingDetailsScreen: React.FC<Props> = ({ navigation, rout
     );
   }
 
-  const getStatusColor = (status: BookingStatus) => {
-    switch (status) {
-      case 'Active':
-        return colors.primary;
-      case 'Confirmed':
-        return colors.accent;
-      case 'Pending':
-        return colors.warning;
-      case 'Completed':
-        return '#3B82F6';
-      case 'Cancelled':
-      default:
-        return colors.danger;
-    }
-  };
-
   const currentStepIndex = LIFECYCLE_STEPS.indexOf(booking.status);
 
   const handleApprove = async () => {

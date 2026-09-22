@@ -5,10 +5,8 @@ import {
   FleetInspection,
   FleetReturn,
   FleetTask,
-  InspectionStatus,
   MaintenanceRecord,
   MaintenanceStatus,
-  ReturnStatus,
   Vehicle,
   VehicleAvailability,
 } from '../types';

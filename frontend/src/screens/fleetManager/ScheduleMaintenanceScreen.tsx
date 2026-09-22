@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native';
 import { FleetManagerStackParamList, MaintenanceStatus, MaintenanceType } from '../../types';
 import { useTheme } from '../../theme';
 import { useFleet } from '../../context/FleetContext';
-import { ScreenContainer, Header, Card, Input, Button } from '../../components/common';
+import { ScreenContainer, Header, Input, Button } from '../../components/common';
 
 type ScheduleMaintNavProp = NativeStackNavigationProp<
   FleetManagerStackParamList,
@@ -32,7 +32,7 @@ const SERVICE_TYPES: MaintenanceType[] = [
 ];
 
 export const ScheduleMaintenanceScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, spacing, borderRadius } = useTheme();
   const { vehicles, scheduleMaintenance } = useFleet();
 
   const preselectedVehicleId = route.params?.vehicleId;
@@ -44,7 +44,7 @@ export const ScheduleMaintenanceScreen: React.FC<Props> = ({ navigation, route }
   const [estimatedCost, setEstimatedCost] = useState('120');
   const [serviceCenter, setServiceCenter] = useState('Metro Certified Hub West');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<MaintenanceStatus>('Scheduled');
+  const [status] = useState<MaintenanceStatus>('Scheduled');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);

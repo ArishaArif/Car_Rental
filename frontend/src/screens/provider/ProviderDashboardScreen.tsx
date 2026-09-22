@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ProviderStackParamList } from '../../types';
 import { useTheme } from '../../theme';
@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useFleet } from '../../context/FleetContext';
 import { useBooking } from '../../context/BookingContext';
 import { notificationService } from '../../services/notificationService';
-import { ScreenContainer, Header, Card, Button } from '../../components/common';
+import { ScreenContainer, Header, Card } from '../../components/common';
 
 type ProviderDashboardNavProp = NativeStackNavigationProp<
   ProviderStackParamList,
@@ -20,8 +20,8 @@ interface Props {
 
 export const ProviderDashboardScreen: React.FC<Props> = ({ navigation }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
-  const { user, logout, isLoading } = useAuth();
-  const { vehicles, getDashboardKPIs } = useFleet();
+  const { user } = useAuth();
+  const { getDashboardKPIs } = useFleet();
   const { bookings, getRevenueMetrics } = useBooking();
 
   const kpis = getDashboardKPIs();

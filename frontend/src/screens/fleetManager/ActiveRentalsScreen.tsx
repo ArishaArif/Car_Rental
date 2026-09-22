@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Booking, FleetManagerStackParamList } from '../../types';
 import { useTheme } from '../../theme';
 import { useBooking } from '../../context/BookingContext';
-import { ScreenContainer, Header, Card, EmptyState, Button } from '../../components/common';
+import { ScreenContainer, Header, Card, EmptyState } from '../../components/common';
 
 type ActiveRentalsNavProp = NativeStackNavigationProp<
   FleetManagerStackParamList,

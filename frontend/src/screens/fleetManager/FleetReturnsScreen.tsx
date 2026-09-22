@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native';
 import { FleetManagerStackParamList, FleetReturn, ReturnStatus } from '../../types';
 import { useTheme } from '../../theme';
 import { useFleet } from '../../context/FleetContext';
-import { ScreenContainer, Header, Card, Button, EmptyState } from '../../components/common';
+import { ScreenContainer, Header, Card, EmptyState } from '../../components/common';
 
 type FleetReturnsNavProp = NativeStackNavigationProp<
   FleetManagerStackParamList,

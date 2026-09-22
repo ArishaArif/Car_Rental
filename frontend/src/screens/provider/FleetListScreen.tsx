@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -34,7 +33,7 @@ const STATUS_FILTERS: (VehicleAvailability | 'All')[] = [
 
 export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
-  const { vehicles, publishVehicle, unpublishVehicle, archiveVehicle } = useFleet();
+  const { vehicles, publishVehicle, unpublishVehicle } = useFleet();
 
   const initialFilter = route.params?.filterStatus || 'All';
   const [activeStatus, setActiveStatus] = useState<VehicleAvailability | 'All'>(initialFilter);

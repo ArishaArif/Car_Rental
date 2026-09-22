@@ -28,7 +28,7 @@ const INTERIOR_OPTIONS = ['Clean', 'Normal', 'Needs Cleaning'] as const;
 const TIRE_OPTIONS = ['Good', 'Fair', 'Needs Replacement'] as const;
 
 export const NewInspectionScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, spacing, borderRadius } = useTheme();
   const { vehicles, createInspection } = useFleet();
   const { user } = useAuth();
 

@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native';
 import { DamageStatus, FleetManagerStackParamList } from '../../types';
 import { useTheme } from '../../theme';
 import { useFleet } from '../../context/FleetContext';
-import { ScreenContainer, Header, Card, Input, Button } from '../../components/common';
+import { ScreenContainer, Header, Input, Button } from '../../components/common';
 
 type NewDamageReportNavProp = NativeStackNavigationProp<
   FleetManagerStackParamList,
@@ -31,7 +31,7 @@ const DAMAGE_CATEGORIES: DamageStatus[] = [
 ];
 
 export const NewDamageReportScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, spacing, borderRadius } = useTheme();
   const { vehicles, createDamageReport } = useFleet();
 
   const preselectedVehicleId = route.params?.vehicleId;

@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Image,
-  ScrollView,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -34,7 +32,6 @@ export const VehicleDetailsScreen: React.FC<Props> = ({ navigation, route }) => 
     publishVehicle,
     unpublishVehicle,
     archiveVehicle,
-    setAvailability,
   } = useFleet();
 
   const vehicle = vehicles.find(v => v.id === vehicleId);
