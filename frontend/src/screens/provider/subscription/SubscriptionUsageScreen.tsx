@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const SubscriptionUsageScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, spacing, borderRadius } = useTheme();
   const [sub, setSub] = useState<ProviderSubscription | null>(null);
 
   useEffect(() => {

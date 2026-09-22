@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useBooking } from '../../context/BookingContext';
 import { vehicleService, CategorySummary } from '../../services/vehicleService';
+import { notificationService } from '../../services/notificationService';
 import { ScreenContainer, Card, CarCard, Loading } from '../../components/common';
 
 type CustomerHomeScreenNavigationProp = NativeStackNavigationProp<
@@ -33,6 +34,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +47,18 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
       }
     };
     loadData();
+
+    const loadUnread = async () => {
+      const count = await notificationService.getUnreadCount('Customer');
+      setUnreadNotifCount(count);
+    };
+    loadUnread();
+
+    const unsubscribe = notificationService.subscribe(async () => {
+      const count = await notificationService.getUnreadCount('Customer');
+      setUnreadNotifCount(count);
+    });
+    return unsubscribe;
   }, []);
 
   const featuredCars = vehicles.slice(0, 4);
@@ -145,6 +159,38 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
               >
                 <Text style={[styles.badgeCountText, { color: colors.textInverse }]}>
                   {favorites.length}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+
+          {/* Notifications Shortcut with Badge */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('NotificationCenter')}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: colors.surfaceVariant,
+                borderColor: colors.border,
+                borderRadius: borderRadius.md,
+                marginLeft: 8,
+              },
+            ]}
+          >
+            <Text style={{ fontSize: 16 }}>🔔</Text>
+            {unreadNotifCount > 0 ? (
+              <View
+                style={[
+                  styles.badgeCount,
+                  {
+                    backgroundColor: colors.danger,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={[styles.badgeCountText, { color: '#FFFFFF' }]}>
+                  {unreadNotifCount}
                 </Text>
               </View>
             ) : null}

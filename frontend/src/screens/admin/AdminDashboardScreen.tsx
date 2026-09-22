@@ -5,6 +5,7 @@ import { AdminStackParamList } from '../../types';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { adminService } from '../../services/adminService';
+import { notificationService } from '../../services/notificationService';
 import { ScreenContainer, Header, Card } from '../../components/common';
 
 type AdminDashboardNavProp = NativeStackNavigationProp<AdminStackParamList, 'AdminDashboard'>;
@@ -17,10 +18,25 @@ export const AdminDashboardScreen: React.FC<Props> = ({ navigation }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
   const { user } = useAuth();
   const [kpis, setKpis] = useState(adminService.getKPIs());
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const unsubscribe = adminService.subscribe(() => {
       setKpis(adminService.getKPIs());
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const loadUnread = async () => {
+      const count = await notificationService.getUnreadCount('Admin');
+      setUnreadCount(count);
+    };
+    loadUnread();
+
+    const unsubscribe = notificationService.subscribe(async () => {
+      const count = await notificationService.getUnreadCount('Admin');
+      setUnreadCount(count);
     });
     return unsubscribe;
   }, []);
@@ -33,19 +49,45 @@ export const AdminDashboardScreen: React.FC<Props> = ({ navigation }) => {
           title="System Admin Console"
           subtitle={user?.department || 'Platform Oversight & Security'}
           rightElement={
-            <TouchableOpacity
-              onPress={() => navigation.navigate('AdminProfile')}
-              style={[
-                styles.profileAvatar,
-                {
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  borderColor: colors.danger,
-                  borderRadius: borderRadius.full,
-                },
-              ]}
-            >
-              <Text style={styles.avatarEmoji}>🛡️</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NotificationCenter')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: colors.surfaceVariant,
+                    borderColor: colors.border,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={{ fontSize: 16 }}>🔔</Text>
+                {unreadCount > 0 && (
+                  <View
+                    style={[
+                      styles.unreadBadge,
+                      { backgroundColor: colors.danger, borderRadius: borderRadius.full },
+                    ]}
+                  >
+                    <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('AdminProfile')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    borderColor: colors.danger,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={styles.avatarEmoji}>🛡️</Text>
+              </TouchableOpacity>
+            </View>
           }
         />
       }
@@ -389,6 +431,26 @@ export const AdminDashboardScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   content: {
     paddingBottom: 40,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
   },
   profileAvatar: {
     width: 36,

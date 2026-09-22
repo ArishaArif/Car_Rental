@@ -82,6 +82,14 @@ import {
   ProviderProfileScreen,
 } from '../screens/provider';
 import {
+  SubscriptionOverviewScreen,
+  SubscriptionPlansScreen,
+  SubscriptionUsageScreen,
+  BillingHistoryScreen,
+  UpgradeConfirmationScreen,
+} from '../screens/provider/subscription';
+import { NotificationCenterScreen } from '../screens/common/NotificationCenterScreen';
+import {
   FleetManagerDashboardScreen,
   FleetManagerFleetScreen,
   FleetManagerVehicleDetailsScreen,
@@ -160,6 +168,7 @@ const CustomerNavigator: React.FC = () => (
     <CustomerStack.Screen name="CustomerProfile" component={CustomerProfileScreen} />
     <CustomerStack.Screen name="EditProfile" component={EditProfileScreen} />
     <CustomerStack.Screen name="CustomerSettings" component={CustomerSettingsScreen} />
+    <CustomerStack.Screen name="NotificationCenter" component={NotificationCenterScreen} />
   </CustomerStack.Navigator>
 );
 
@@ -187,6 +196,30 @@ const ProviderNavigator: React.FC = () => (
     <ProviderStack.Screen name="SmartPricing" component={SmartPricingScreen} />
     <ProviderStack.Screen name="VehiclePricingAnalysis" component={VehiclePricingAnalysisScreen} />
     <ProviderStack.Screen name="ProviderProfile" component={ProviderProfileScreen} />
+    <ProviderStack.Screen
+      name="SubscriptionOverview"
+      component={SubscriptionOverviewScreen}
+    />
+    <ProviderStack.Screen
+      name="SubscriptionPlans"
+      component={SubscriptionPlansScreen}
+    />
+    <ProviderStack.Screen
+      name="SubscriptionUsage"
+      component={SubscriptionUsageScreen}
+    />
+    <ProviderStack.Screen
+      name="BillingHistory"
+      component={BillingHistoryScreen}
+    />
+    <ProviderStack.Screen
+      name="UpgradeConfirmation"
+      component={UpgradeConfirmationScreen}
+    />
+    <ProviderStack.Screen
+      name="NotificationCenter"
+      component={NotificationCenterScreen}
+    />
   </ProviderStack.Navigator>
 );
 
@@ -257,6 +290,10 @@ const FleetManagerNavigator: React.FC = () => (
       name="FleetManagerProfile"
       component={FleetManagerProfileScreen}
     />
+    <FleetManagerStack.Screen
+      name="NotificationCenter"
+      component={NotificationCenterScreen}
+    />
   </FleetManagerStack.Navigator>
 );
 
@@ -289,6 +326,10 @@ const AdminNavigator: React.FC = () => (
     <AdminStack.Screen name="AdminReports" component={AdminReportsScreen} />
     <AdminStack.Screen name="AdminConfig" component={AdminConfigScreen} />
     <AdminStack.Screen name="AdminProfile" component={AdminProfileScreen} />
+    <AdminStack.Screen
+      name="NotificationCenter"
+      component={NotificationCenterScreen}
+    />
   </AdminStack.Navigator>
 );
 

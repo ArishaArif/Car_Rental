@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ProviderStackParamList } from '../../types';
@@ -6,6 +6,7 @@ import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useFleet } from '../../context/FleetContext';
 import { useBooking } from '../../context/BookingContext';
+import { notificationService } from '../../services/notificationService';
 import { ScreenContainer, Header, Card, Button } from '../../components/common';
 
 type ProviderDashboardNavProp = NativeStackNavigationProp<
@@ -25,6 +26,22 @@ export const ProviderDashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const kpis = getDashboardKPIs();
   const rev = getRevenueMetrics();
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const loadUnread = async () => {
+      const count = await notificationService.getUnreadCount('Provider');
+      setUnreadCount(count);
+    };
+    loadUnread();
+
+    const unsubscribe = notificationService.subscribe(async () => {
+      const count = await notificationService.getUnreadCount('Provider');
+      setUnreadCount(count);
+    });
+    return unsubscribe;
+  }, []);
 
   const pendingBookings = bookings.filter(b => b.status === 'Pending').length;
   const activeRentals = bookings.filter(b => b.status === 'Active').length;
@@ -55,19 +72,45 @@ export const ProviderDashboardScreen: React.FC<Props> = ({ navigation }) => {
           title={user?.businessName || 'Apex Fleet Holdings'}
           subtitle="Provider Operations Portal"
           rightElement={
-            <TouchableOpacity
-              onPress={() => navigation.navigate('ProviderProfile')}
-              style={[
-                styles.profileAvatar,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  borderColor: colors.primary,
-                  borderRadius: borderRadius.full,
-                },
-              ]}
-            >
-              <Text style={styles.avatarEmoji}>{user?.avatarUrl || '🏢'}</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NotificationCenter')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: colors.surfaceVariant,
+                    borderColor: colors.border,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={{ fontSize: 16 }}>🔔</Text>
+                {unreadCount > 0 && (
+                  <View
+                    style={[
+                      styles.unreadBadge,
+                      { backgroundColor: colors.danger, borderRadius: borderRadius.full },
+                    ]}
+                  >
+                    <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ProviderProfile')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: colors.surfaceVariant,
+                    borderColor: colors.primary,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={styles.avatarEmoji}>{user?.avatarUrl || '🏢'}</Text>
+              </TouchableOpacity>
+            </View>
           }
         />
       }
@@ -403,6 +446,18 @@ export const ProviderDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.actionIcon}>⚡</Text>
             <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Smart Pricing</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('SubscriptionOverview')}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: borderRadius.md },
+            ]}
+          >
+            <Text style={styles.actionIcon}>💎</Text>
+            <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>Subscription</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Fleet Utilization Bar */}
@@ -545,6 +600,26 @@ export const ProviderDashboardScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 32,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
   },
   profileAvatar: {
     width: 38,

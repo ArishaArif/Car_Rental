@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FleetManagerStackParamList } from '../../types';
@@ -6,6 +6,7 @@ import { useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useFleet } from '../../context/FleetContext';
 import { useBooking } from '../../context/BookingContext';
+import { notificationService } from '../../services/notificationService';
 import { ScreenContainer, Header, Card, Button } from '../../components/common';
 
 type FleetManagerDashboardNavProp = NativeStackNavigationProp<
@@ -25,6 +26,21 @@ export const FleetManagerDashboardScreen: React.FC<Props> = ({ navigation }) => 
 
   const kpis = getDashboardKPIs();
   const pendingTasks = tasks.filter(t => t.status === 'Pending').slice(0, 3);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const loadUnread = async () => {
+      const count = await notificationService.getUnreadCount('FleetManager');
+      setUnreadCount(count);
+    };
+    loadUnread();
+
+    const unsubscribe = notificationService.subscribe(async () => {
+      const count = await notificationService.getUnreadCount('FleetManager');
+      setUnreadCount(count);
+    });
+    return unsubscribe;
+  }, []);
 
   return (
     <ScreenContainer
@@ -34,19 +50,45 @@ export const FleetManagerDashboardScreen: React.FC<Props> = ({ navigation }) => 
           title="Fleet Operations"
           subtitle={user?.department || 'Austin Hub Control'}
           rightElement={
-            <TouchableOpacity
-              onPress={() => navigation.navigate('FleetManagerProfile')}
-              style={[
-                styles.profileAvatar,
-                {
-                  backgroundColor: colors.surfaceVariant,
-                  borderColor: colors.accent,
-                  borderRadius: borderRadius.full,
-                },
-              ]}
-            >
-              <Text style={{ fontSize: 18 }}>🛠️</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NotificationCenter')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: colors.surfaceVariant,
+                    borderColor: colors.border,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={{ fontSize: 16 }}>🔔</Text>
+                {unreadCount > 0 && (
+                  <View
+                    style={[
+                      styles.unreadBadge,
+                      { backgroundColor: colors.danger, borderRadius: borderRadius.full },
+                    ]}
+                  >
+                    <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('FleetManagerProfile')}
+                style={[
+                  styles.profileAvatar,
+                  {
+                    backgroundColor: colors.surfaceVariant,
+                    borderColor: colors.accent,
+                    borderRadius: borderRadius.full,
+                  },
+                ]}
+              >
+                <Text style={{ fontSize: 18 }}>🛠️</Text>
+              </TouchableOpacity>
+            </View>
           }
         />
       }
@@ -372,6 +414,26 @@ export const FleetManagerDashboardScreen: React.FC<Props> = ({ navigation }) => 
 const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
   },
   profileAvatar: {
     width: 36,

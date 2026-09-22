@@ -715,6 +715,7 @@ export interface ProviderSubscription {
   id: string;
   providerId: string;
   planId: SubscriptionPlanId;
+  planName?: string;
   status: 'Active' | 'Trial' | 'Past Due' | 'Cancelled';
   billingCycle: 'monthly' | 'annual';
   startDate: string;

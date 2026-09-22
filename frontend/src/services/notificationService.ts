@@ -1,4 +1,4 @@
-import { AppNotification, NotificationCategory, UserRole } from '../types';
+import { AppNotification, UserRole } from '../types';
 
 type NotificationChangeListener = () => void;
 

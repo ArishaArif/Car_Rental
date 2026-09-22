@@ -110,6 +110,7 @@ export const UpgradeConfirmationScreen: React.FC<Props> = ({ navigation, route }
               </Text>
               <Text style={[styles.targetTagline, { color: colors.textSecondary }]}>
                 {targetPlan.tagline}
+                {currentSub ? ` • Upgrading from ${currentSub.planName}` : ''}
               </Text>
 
               {/* Price summary */}
