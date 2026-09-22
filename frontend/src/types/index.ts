@@ -283,6 +283,7 @@ export type CustomerStackParamList = {
   CustomerProfile: undefined;
   EditProfile: undefined;
   CustomerSettings: undefined;
+  NotificationCenter: undefined;
 };
 
 export type ProviderStackParamList = {
@@ -299,6 +300,12 @@ export type ProviderStackParamList = {
   SmartPricing: { vehicleId?: string } | undefined;
   VehiclePricingAnalysis: { vehicleId: string };
   ProviderProfile: undefined;
+  SubscriptionOverview: undefined;
+  SubscriptionPlans: undefined;
+  SubscriptionUsage: undefined;
+  BillingHistory: undefined;
+  UpgradeConfirmation: { targetPlanId: SubscriptionPlanId; billingCycle?: 'monthly' | 'annual' };
+  NotificationCenter: undefined;
 };
 
 export type FleetManagerStackParamList = {
@@ -316,6 +323,7 @@ export type FleetManagerStackParamList = {
   NewDamageReport: { vehicleId?: string; bookingId?: string } | undefined;
   FleetTasks: undefined;
   FleetManagerProfile: undefined;
+  NotificationCenter: undefined;
 };
 
 export type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
@@ -335,6 +343,7 @@ export type AdminStackParamList = {
   AdminConfig: undefined;
   AdminProfile: undefined;
   AdminConsole?: undefined;
+  NotificationCenter: undefined;
 };
 
 export type RootStackParamList = {
@@ -670,3 +679,83 @@ export interface SystemConfig {
     peakMultiplierBaseline: number;
   };
 }
+
+// ==========================================
+// Provider SaaS Subscription Types
+// ==========================================
+
+export type SubscriptionPlanId = 'starter' | 'professional' | 'business';
+
+export interface SubscriptionPlan {
+  id: SubscriptionPlanId;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  vehicleLimit: number; // e.g. 5, 25, or -1 for unlimited
+  bookingLimit: number; // e.g. 30, 150, or -1 for unlimited
+  aiAssistantAccess: string;
+  smartPricingAccess: string;
+  analytics: string;
+  teamMembers: number; // -1 for unlimited
+  support: string;
+  features: string[];
+}
+
+export interface SubscriptionUsage {
+  vehiclesUsed: number;
+  vehicleLimit: number;
+  bookingsUsed: number;
+  bookingLimit: number;
+  teamSeatsUsed: number;
+  teamSeatsLimit: number;
+}
+
+export interface ProviderSubscription {
+  id: string;
+  providerId: string;
+  planId: SubscriptionPlanId;
+  status: 'Active' | 'Trial' | 'Past Due' | 'Cancelled';
+  billingCycle: 'monthly' | 'annual';
+  startDate: string;
+  renewalDate: string;
+  usage: SubscriptionUsage;
+  enabledFeatures: string[];
+}
+
+export interface BillingInvoiceRecord {
+  id: string;
+  invoiceNumber: string;
+  date: string;
+  amount: number;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  status: 'Paid' | 'Pending' | 'Failed';
+  paymentMethod: string;
+  pdfUrl?: string;
+}
+
+// ==========================================
+// Notification Center Types
+// ==========================================
+
+export type NotificationCategory =
+  | 'Booking'
+  | 'Payment'
+  | 'Rental'
+  | 'Vehicle'
+  | 'Maintenance'
+  | 'System';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  category: NotificationCategory;
+  timestamp: string;
+  isRead: boolean;
+  targetRole?: UserRole;
+  actionRoute?: string;
+  metadata?: Record<string, any>;
+}
+
