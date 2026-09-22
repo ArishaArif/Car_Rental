@@ -65,6 +65,8 @@ export interface AuthUser {
   preferences?: CustomerPreferences;
 }
 
+export type User = AuthUser;
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -171,6 +173,8 @@ export interface BookingInvoice {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
 }
+
+export type Invoice = BookingInvoice;
 
 export type AppLanguage = 'English' | 'Urdu' | 'Roman Urdu';
 
@@ -386,6 +390,8 @@ export interface MaintenanceRecord {
   notes?: string;
   odometerAtService?: number;
 }
+
+export type Maintenance = MaintenanceRecord;
 
 export type InspectionStatus = 'Pending' | 'In Progress' | 'Completed' | 'Failed';
 
@@ -640,6 +646,8 @@ export interface AdminPaymentRecord {
   payoutStatus: 'Paid' | 'Pending' | 'Processing';
   transactionDate: string;
 }
+
+export type Payment = AdminPaymentRecord;
 
 export interface DisputeRecord {
   id: string;
