@@ -22,7 +22,20 @@ import {
   ResetPasswordScreen,
   ProfileSetupScreen,
 } from '../screens/auth';
-import { AdminPlaceholderScreen } from '../screens/placeholders';
+import {
+  AdminDashboardScreen,
+  AdminUsersScreen,
+  AdminProvidersScreen,
+  AdminProviderVerificationScreen,
+  AdminCustomerVerificationScreen,
+  AdminVehiclesScreen,
+  AdminBookingsScreen,
+  AdminPaymentsScreen,
+  AdminDisputesScreen,
+  AdminReportsScreen,
+  AdminConfigScreen,
+  AdminProfileScreen,
+} from '../screens/admin';
 import {
   CustomerHomeScreen,
   SearchCarsScreen,
@@ -252,12 +265,30 @@ const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 
 const AdminNavigator: React.FC = () => (
   <AdminStack.Navigator
+    initialRouteName="AdminDashboard"
     screenOptions={{
       headerShown: false,
       animation: 'slide_from_right',
     }}
   >
-    <AdminStack.Screen name="AdminConsole" component={AdminPlaceholderScreen} />
+    <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    <AdminStack.Screen name="AdminUsers" component={AdminUsersScreen} />
+    <AdminStack.Screen name="AdminProviders" component={AdminProvidersScreen} />
+    <AdminStack.Screen
+      name="AdminProviderVerification"
+      component={AdminProviderVerificationScreen}
+    />
+    <AdminStack.Screen
+      name="AdminCustomerVerification"
+      component={AdminCustomerVerificationScreen}
+    />
+    <AdminStack.Screen name="AdminVehicles" component={AdminVehiclesScreen} />
+    <AdminStack.Screen name="AdminBookings" component={AdminBookingsScreen} />
+    <AdminStack.Screen name="AdminPayments" component={AdminPaymentsScreen} />
+    <AdminStack.Screen name="AdminDisputes" component={AdminDisputesScreen} />
+    <AdminStack.Screen name="AdminReports" component={AdminReportsScreen} />
+    <AdminStack.Screen name="AdminConfig" component={AdminConfigScreen} />
+    <AdminStack.Screen name="AdminProfile" component={AdminProfileScreen} />
   </AdminStack.Navigator>
 );
 

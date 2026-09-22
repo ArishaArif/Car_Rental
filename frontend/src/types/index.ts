@@ -318,8 +318,23 @@ export type FleetManagerStackParamList = {
   FleetManagerProfile: undefined;
 };
 
+export type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
+export type DisputeStatus = 'Open' | 'Under Review' | 'Resolved';
+
 export type AdminStackParamList = {
-  AdminConsole: undefined;
+  AdminDashboard: undefined;
+  AdminUsers: undefined;
+  AdminProviders: undefined;
+  AdminProviderVerification: { filterStatus?: VerificationStatus } | undefined;
+  AdminCustomerVerification: { filterStatus?: VerificationStatus } | undefined;
+  AdminVehicles: undefined;
+  AdminBookings: { initialFilter?: BookingStatus } | undefined;
+  AdminPayments: undefined;
+  AdminDisputes: { filterStatus?: DisputeStatus } | undefined;
+  AdminReports: undefined;
+  AdminConfig: undefined;
+  AdminProfile: undefined;
+  AdminConsole?: undefined;
 };
 
 export type RootStackParamList = {
@@ -542,4 +557,116 @@ export interface VehiclePricingMetrics {
   factors: PricingFactor[];
 }
 
+// ==========================================
+// System Admin Domain Types
+// ==========================================
 
+export interface AdminKPIs {
+  totalCustomers: number;
+  totalProviders: number;
+  totalVehicles: number;
+  activeRentals: number;
+  totalBookings: number;
+  platformRevenue: number;
+  pendingVerifications: number;
+  openDisputes: number;
+}
+
+export interface AdminUserRecord {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  phone: string;
+  city: string;
+  joinedDate: string;
+  verificationStatus: VerificationStatus;
+  status: 'Active' | 'Suspended';
+  licenseNumber?: string;
+  businessName?: string;
+  totalBookingsOrVehicles: number;
+}
+
+export interface AdminProviderRecord {
+  id: string;
+  providerName: string;
+  businessName: string;
+  fleetSize: number;
+  verificationStatus: VerificationStatus;
+  revenue: number;
+  status: 'Active' | 'Suspended';
+  email: string;
+  phone: string;
+  city: string;
+  taxId?: string;
+  joinedDate: string;
+}
+
+export interface AdminVerificationItem {
+  id: string;
+  targetId: string;
+  name: string;
+  type: 'Provider' | 'Customer';
+  identifier: string;
+  submittedDate: string;
+  status: VerificationStatus;
+  documentType: string;
+  documentNumber: string;
+  expiryDate?: string;
+  documentUrl?: string;
+  notes?: string;
+}
+
+export interface AdminPaymentRecord {
+  id: string;
+  bookingId: string;
+  customerName: string;
+  providerName: string;
+  vehicleName: string;
+  rentalAmount: number;
+  platformCommission: number;
+  providerPayout: number;
+  securityDeposit: number;
+  refundStatus: 'Refunded' | 'Held' | 'Partially Refunded' | 'No Refund Required';
+  payoutStatus: 'Paid' | 'Pending' | 'Processing';
+  transactionDate: string;
+}
+
+export interface DisputeRecord {
+  id: string;
+  bookingId: string;
+  customerName: string;
+  providerName: string;
+  vehicleName: string;
+  disputedAmount: number;
+  reason: string;
+  status: DisputeStatus;
+  reportedAt: string;
+  evidence?: string;
+  adminNotes?: string;
+}
+
+export interface SystemConfigCategory {
+  id: string;
+  name: string;
+  isActive: boolean;
+  basePrice: number;
+}
+
+export interface SystemConfigRegion {
+  id: string;
+  name: string;
+  stateOrCountry: string;
+  isActive: boolean;
+}
+
+export interface SystemConfig {
+  vehicleCategories: SystemConfigCategory[];
+  commissionRate: number; // percentage
+  regions: SystemConfigRegion[];
+  pricingBaseline: {
+    minDailyRate: number;
+    defaultDeposit: number;
+    peakMultiplierBaseline: number;
+  };
+}
