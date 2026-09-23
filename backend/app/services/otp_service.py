@@ -1,0 +1,92 @@
+"""
+OTP Service — generates, stores, validates, and cleans up OTPs.
+Uses cryptographically secure random digits.
+"""
+
+import secrets
+from datetime import datetime, timedelta, timezone
+
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+
+from app.models.otp import OTP, OTPPurpose
+from app.config import settings
+
+
+def _generate_otp(length: int = 6) -> str:
+    """Generate a cryptographically secure numeric OTP."""
+    return "".join([str(secrets.randbelow(10)) for _ in range(length)])
+
+
+async def create_otp(
+    db: AsyncSession,
+    user_id: str,
+    purpose: OTPPurpose,
+) -> str:
+    """
+    Invalidate any existing OTPs for this user+purpose,
+    create a new OTP, persist it, and return the code.
+    """
+    # Invalidate all existing unused OTPs for this user/purpose
+    await db.execute(
+        update(OTP)
+        .where(OTP.user_id == user_id, OTP.purpose == purpose, OTP.is_used == False)  # noqa: E712
+        .values(is_used=True)
+    )
+
+    code = _generate_otp(settings.OTP_LENGTH)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.OTP_EXPIRE_MINUTES)
+
+    otp = OTP(
+        user_id=user_id,
+        code=code,
+        purpose=purpose,
+        is_used=False,
+        expires_at=expires_at,
+    )
+    db.add(otp)
+    await db.flush()  # persist without committing (session handles commit)
+
+    return code
+
+
+async def verify_otp(
+    db: AsyncSession,
+    user_id: str,
+    code: str,
+    purpose: OTPPurpose,
+) -> bool:
+    """
+    Verify an OTP code for the given user and purpose.
+
+    Raises:
+        HTTPException 400 — if OTP is invalid, expired, or already used
+    """
+    result = await db.execute(
+        select(OTP).where(
+            OTP.user_id == user_id,
+            OTP.code == code,
+            OTP.purpose == purpose,
+            OTP.is_used == False,  # noqa: E712
+        )
+    )
+    otp = result.scalar_one_or_none()
+
+    if not otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code",
+        )
+
+    if otp.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP has expired. Please request a new one.",
+        )
+
+    # Mark OTP as used
+    otp.is_used = True
+    await db.flush()
+
+    return True
