@@ -70,23 +70,26 @@ const styles = StyleSheet.create({
   },
   userContainer: {
     justifyContent: 'flex-end',
-    paddingLeft: 48,
+    paddingLeft: 36,
   },
   aiContainer: {
     justifyContent: 'flex-start',
-    paddingRight: 32,
+    paddingRight: 36,
   },
   bubble: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    maxWidth: '100%',
+    maxWidth: '88%',
+    flexShrink: 1,
   },
   userBubble: {
     borderBottomRightRadius: 4,
+    alignSelf: 'flex-end',
   },
   aiBubble: {
     borderTopLeftRadius: 4,
     borderWidth: 1,
+    alignSelf: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -95,6 +98,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontWeight: '400',
+    flexShrink: 1,
   },
   timestamp: {
     marginTop: 4,

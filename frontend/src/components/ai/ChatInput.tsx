@@ -17,6 +17,7 @@ interface ChatInputProps {
   language: LanguageMode;
   onSelectLanguage: (lang: LanguageMode) => void;
   isProcessing?: boolean;
+  bottomInset?: number;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -27,6 +28,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   language,
   onSelectLanguage,
   isProcessing = false,
+  bottomInset = 12,
 }) => {
   const { colors, typography, borderRadius } = useTheme();
 
@@ -44,8 +46,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const languages: LanguageMode[] = ['English', 'Urdu', 'Roman Urdu'];
 
+  const canSend = Boolean(value.trim()) && !isProcessing;
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          paddingBottom: Math.max(bottomInset, 8),
+        },
+      ]}
+    >
       {/* Language Switcher Bar */}
       <View style={styles.langBar}>
         <Text style={[styles.langLabel, { color: colors.textSecondary, fontSize: typography.fontSizes.xs }]}>
@@ -108,6 +121,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             },
           ]}
           multiline
+          textAlignVertical="top"
           maxLength={300}
           editable={!isProcessing}
         />
@@ -116,17 +130,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onSend}
-          disabled={!value.trim() || isProcessing}
+          disabled={!canSend}
           style={[
             styles.sendBtn,
             {
-              backgroundColor: !value.trim() || isProcessing ? colors.border : colors.primary,
+              backgroundColor: canSend ? colors.primary : colors.surfaceVariant,
+              borderColor: canSend ? colors.primary : colors.border,
               borderRadius: borderRadius.full,
             },
           ]}
           accessibilityLabel="Send message"
         >
-          <Text style={styles.sendIcon}>➔</Text>
+          <Text
+            style={[
+              styles.sendIcon,
+              {
+                color: canSend ? '#0F172A' : colors.textMuted,
+              },
+            ]}
+          >
+            ➔
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -143,7 +167,7 @@ const styles = StyleSheet.create({
   langBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   langLabel: {
     fontWeight: '600',
@@ -155,7 +179,7 @@ const styles = StyleSheet.create({
   },
   langBtn: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
     marginRight: 4,
@@ -166,7 +190,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: 8,
   },
   micBtn: {
@@ -174,6 +198,7 @@ const styles = StyleSheet.create({
     height: 42,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 1,
   },
   micIcon: {
     fontSize: 20,
@@ -181,19 +206,21 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     minHeight: 42,
-    maxHeight: 100,
+    maxHeight: 96,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   sendBtn: {
     width: 42,
     height: 42,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    marginBottom: 1,
   },
   sendIcon: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '800',
   },

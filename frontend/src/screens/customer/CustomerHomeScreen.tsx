@@ -76,7 +76,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           styles.headerBar,
           {
             paddingHorizontal: spacing.md,
-            paddingVertical: spacing.sm + 4,
+            paddingVertical: spacing.sm + 2,
             backgroundColor: colors.surface,
             borderBottomColor: colors.border,
             borderBottomWidth: 1,
@@ -101,10 +101,15 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             <Text style={styles.avatarText}>{user?.avatarUrl || '🚗'}</Text>
           </View>
           <View style={styles.nameContainer}>
-            <Text style={[styles.greeting, { color: colors.textMuted, fontSize: typography.fontSizes.xs }]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.greeting, { color: colors.textMuted, fontSize: typography.fontSizes.xs }]}
+            >
               WELCOME BACK
             </Text>
             <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
               style={[
                 styles.userName,
                 { color: colors.textPrimary, fontSize: typography.fontSizes.md, fontWeight: typography.fontWeights.bold },
@@ -126,11 +131,11 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                 backgroundColor: colors.primary + '18',
                 borderColor: colors.primary,
                 borderRadius: borderRadius.md,
-                marginRight: 6,
               },
             ]}
+            accessibilityLabel="AI Assistant"
           >
-            <Text style={{ fontSize: 18 }}>🤖</Text>
+            <Text style={{ fontSize: 16 }}>🤖</Text>
           </TouchableOpacity>
 
           {/* Favorites Shortcut with Badge */}
@@ -145,8 +150,9 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                 borderRadius: borderRadius.md,
               },
             ]}
+            accessibilityLabel="Favorites"
           >
-            <Text style={{ fontSize: 18 }}>❤️</Text>
+            <Text style={{ fontSize: 16 }}>❤️</Text>
             {favorites.length > 0 ? (
               <View
                 style={[
@@ -174,11 +180,11 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                 backgroundColor: colors.surfaceVariant,
                 borderColor: colors.border,
                 borderRadius: borderRadius.md,
-                marginLeft: 8,
               },
             ]}
+            accessibilityLabel="Notifications"
           >
-            <Text style={{ fontSize: 16 }}>🔔</Text>
+            <Text style={{ fontSize: 15 }}>🔔</Text>
             {unreadNotifCount > 0 ? (
               <View
                 style={[
@@ -206,11 +212,11 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                 backgroundColor: colors.surfaceVariant,
                 borderColor: colors.border,
                 borderRadius: borderRadius.md,
-                marginLeft: 8,
               },
             ]}
+            accessibilityLabel="Settings"
           >
-            <Text style={{ fontSize: 16 }}>⚙️</Text>
+            <Text style={{ fontSize: 15 }}>⚙️</Text>
           </TouchableOpacity>
 
           {/* Sign Out Shortcut */}
@@ -223,11 +229,11 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                 backgroundColor: colors.surfaceVariant,
                 borderColor: colors.border,
                 borderRadius: borderRadius.md,
-                marginLeft: 8,
               },
             ]}
+            accessibilityLabel="Sign out"
           >
-            <Text style={{ fontSize: 16 }}>🚪</Text>
+            <Text style={{ fontSize: 15 }}>🚪</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -324,7 +330,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             borderColor: colors.primary,
             borderRadius: borderRadius.lg,
             padding: spacing.md,
-            marginTop: spacing.md,
+            marginBottom: spacing.md,
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
@@ -333,7 +339,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, marginRight: 8 }}>
               <View
                 style={{
                   width: 38,
@@ -346,11 +352,17 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
               >
                 <Text style={{ fontSize: 20 }}>🤖</Text>
               </View>
-              <View>
-                <Text style={{ color: colors.textPrimary, fontSize: 14, fontWeight: '800' }}>
-                  AI Rental Assistant & Voice Concierge
+              <View style={{ flex: 1 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '800' }}
+                >
+                  AI Assistant & Voice Concierge
                 </Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}
+                >
                   Chat or speak in English, Urdu or Roman Urdu
                 </Text>
               </View>
@@ -364,7 +376,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
               }}
             >
               <Text style={{ color: colors.primary, fontSize: 11, fontWeight: '700' }}>
-                Open Chat ➔
+                Open ➔
               </Text>
             </View>
           </View>
@@ -374,7 +386,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             {[
               'I need an SUV this weekend',
               '3 din ke liye car chahiye',
-              'Mujhe Islamabad mein Corolla chahiye',
+              'Islamabad mein Corolla chahiye',
             ].map((prompt, idx) => (
               <TouchableOpacity
                 key={`p-${idx}`}
@@ -400,7 +412,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
         <Card
           variant="elevated"
           padding="medium"
-          style={[styles.heroCard, { borderColor: colors.border, marginVertical: spacing.md }]}
+          style={[styles.heroCard, { borderColor: colors.border, marginBottom: spacing.md }]}
         >
           <View style={styles.heroTextContainer}>
             <Text
@@ -445,6 +457,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           >
             <Text style={{ fontSize: 16, marginRight: 8 }}>🔍</Text>
             <Text
+              numberOfLines={1}
               style={[
                 styles.searchPlaceholder,
                 { color: colors.textMuted, fontSize: typography.fontSizes.sm },
@@ -481,7 +494,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.categoriesGrid, { marginVertical: spacing.sm }]}>
+        <View style={[styles.categoriesGrid, { marginBottom: spacing.md }]}>
           {categories.map(cat => (
             <TouchableOpacity
               key={cat.category}
@@ -499,6 +512,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
               <Text style={styles.categoryIcon}>{cat.icon}</Text>
               <View style={styles.categoryTextWrapper}>
                 <Text
+                  numberOfLines={1}
                   style={[
                     styles.categoryName,
                     {
@@ -511,6 +525,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
                   {cat.category}
                 </Text>
                 <Text
+                  numberOfLines={1}
                   style={[
                     styles.categoryCount,
                     { color: colors.textMuted, fontSize: typography.fontSizes.xs - 1 },
@@ -524,7 +539,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
         </View>
 
         {/* Featured Vehicles (Horizontal Carousel) */}
-        <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
+        <View style={styles.sectionHeader}>
           <Text
             style={[
               styles.sectionTitle,
@@ -552,7 +567,8 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: spacing.sm }}
+          contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}
+          style={{ marginHorizontal: -spacing.md, marginBottom: spacing.md }}
         >
           {featuredCars.map(car => (
             <CarCard
@@ -613,19 +629,22 @@ const styles = StyleSheet.create({
   headerUser: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    flex: 1,
+    marginRight: 8,
   },
   userAvatarBadge: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 22,
+    fontSize: 20,
   },
   nameContainer: {
+    flex: 1,
     justifyContent: 'center',
   },
   greeting: {
@@ -638,10 +657,11 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   iconBtn: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -651,17 +671,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    width: 18,
-    height: 18,
+    width: 17,
+    height: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeCountText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
   },
   content: {
-    paddingBottom: 28,
+    paddingBottom: 36,
   },
   heroCard: {
     borderWidth: 1,
@@ -689,7 +709,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 4,
+    marginTop: 6,
+    marginBottom: 6,
   },
   sectionTitle: {
     letterSpacing: -0.2,
@@ -700,18 +721,19 @@ const styles = StyleSheet.create({
   categoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   categoryPill: {
-    width: '48%',
+    flexBasis: '48%',
+    flexGrow: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
   },
   categoryIcon: {
-    fontSize: 24,
-    marginRight: 10,
+    fontSize: 22,
+    marginRight: 8,
   },
   categoryTextWrapper: {
     flex: 1,
@@ -734,7 +756,7 @@ const styles = StyleSheet.create({
   quickBar: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 4,
+    marginBottom: 14,
   },
   quickBarBtn: {
     flex: 1,
@@ -742,7 +764,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderWidth: 1,
   },
 });

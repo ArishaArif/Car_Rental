@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useTheme } from '../../theme';
@@ -76,7 +76,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
     <ScreenContainer
       style={styles.container}
       header={
-        <View style={[styles.topBar, { paddingHorizontal: spacing.md, paddingTop: spacing.sm }]}>
+        <View style={[styles.topBar, { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs }]}>
           <Text
             style={[
               styles.brandMini,
@@ -90,24 +90,52 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             VELOX MOBILITY
           </Text>
 
-          <TouchableOpacity onPress={handleSkip} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text
+          {!isLastSlide ? (
+            <TouchableOpacity
+              onPress={handleSkip}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={[
-                styles.skipText,
+                styles.skipButton,
                 {
-                  color: colors.textSecondary,
-                  fontSize: typography.fontSizes.sm,
-                  fontWeight: typography.fontWeights.semiBold,
+                  backgroundColor: colors.surfaceVariant,
+                  borderColor: colors.border,
+                  borderRadius: borderRadius.full,
                 },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel="Skip onboarding"
             >
-              Skip
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.skipText,
+                  {
+                    color: colors.textSecondary,
+                    fontSize: typography.fontSizes.xs + 1,
+                    fontWeight: typography.fontWeights.semiBold,
+                  },
+                ]}
+              >
+                Skip
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 48 }} />
+          )}
         </View>
       }
       footer={
-        <View style={[styles.bottomContainer, { padding: spacing.lg, borderTopColor: colors.border }]}>
+        <View
+          style={[
+            styles.bottomContainer,
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.md,
+              paddingBottom: spacing.sm,
+            },
+          ]}
+        >
           {/* Pagination Indicators */}
           <View style={styles.paginationRow}>
             {ONBOARDING_SLIDES.map((slide, index) => {
@@ -133,10 +161,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             {currentIndex > 0 ? (
               <Button
                 title="Back"
-                variant="ghost"
-                size="medium"
+                variant="secondary"
+                size="large"
                 onPress={() => setCurrentIndex(prev => prev - 1)}
-                style={{ marginRight: spacing.sm, minWidth: 80 }}
+                style={{ marginRight: spacing.sm, minWidth: 90 }}
               />
             ) : null}
 
@@ -145,18 +173,21 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
               variant="primary"
               size="large"
               onPress={handleNext}
-              fullWidth={currentIndex === 0}
-              style={currentIndex > 0 ? { flex: 1 } : undefined}
+              style={{ flex: 1 }}
             />
           </View>
         </View>
       }
     >
-      <View style={[styles.slideContent, { paddingHorizontal: spacing.lg }]}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollSlideContent, { paddingHorizontal: spacing.lg }]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
         {/* Visual Showcase Card */}
         <Card
           variant="elevated"
-          padding="large"
+          padding="medium"
           style={[styles.heroCard, { borderColor: colors.border }]}
         >
           {/* Accent Badge */}
@@ -234,7 +265,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             {currentSlide.description}
           </Text>
         </View>
-      </View>
+      </ScrollView>
     </ScreenContainer>
   );
 };
@@ -247,46 +278,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 44,
   },
   brandMini: {
     letterSpacing: 1.5,
   },
-  skipText: {
-    padding: 4,
-  },
-  slideContent: {
-    flex: 1,
+  skipButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    minHeight: 32,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+  },
+  skipText: {
+    letterSpacing: 0.3,
+  },
+  scrollSlideContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
   heroCard: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 260,
-    marginBottom: 28,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    minHeight: 180,
+    maxHeight: 250,
+    marginBottom: 16,
   },
   badgeContainer: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   badgeText: {
     fontWeight: '700',
     letterSpacing: 0.8,
   },
   glyphContainer: {
-    paddingVertical: 14,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   glyphText: {
-    fontSize: 68,
+    fontSize: 54,
   },
   statChip: {
-    marginTop: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -314,7 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
     gap: 8,
   },
   pageIndicator: {
@@ -323,5 +366,6 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: '100%',
   },
 });
