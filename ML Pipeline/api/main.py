@@ -1,8 +1,8 @@
 """
 PredictDrive — ML Service API
 ==================================
-Single FastAPI app your backend teammate integrates with. Exposes both
-AI features behind two endpoints.
+Single FastAPI app your backend teammate integrates with. Exposes all
+three AI features behind three endpoints.
 
 Run from inside ml-service/:
     pip install -r requirements.txt
@@ -17,13 +17,21 @@ Example calls:
     curl -X POST http://127.0.0.1:8000/predict-price \
          -H "Content-Type: application/json" \
          -d '{"vehicle_make": "Toyota", "vehicle_type": "suv", "vehicle_year": 2021}'
+
+    curl -X POST http://127.0.0.1:8000/chat \
+         -H "Content-Type: application/json" \
+         -d '{"message": "What SUVs do you have this weekend?"}'
 """
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 
 from recommendation.engine import CarRecommender
 from price_prediction.model import PricePredictor
-from .schemas import RecommendationRequest, PriceRequest
+from chatbot.client import Chatbot, ChatbotError
+from .schemas import RecommendationRequest, PriceRequest, ChatRequest, ChatResponse
 
 app = FastAPI(title="PredictDrive ML Service")
 
@@ -35,6 +43,11 @@ try:
 except FileNotFoundError:
     price_predictor = None  # train.py hasn't been run yet
 
+try:
+    chatbot = Chatbot()
+except ChatbotError:
+    chatbot = None  # HF_API_TOKEN not set yet in .env
+
 
 @app.get("/health")
 def health():
@@ -42,6 +55,7 @@ def health():
         "status": "ok",
         "recommendation_catalog_size": len(recommender.df),
         "price_model_loaded": price_predictor is not None,
+        "chatbot_loaded": chatbot is not None,
     }
 
 
@@ -72,3 +86,17 @@ def predict_price(req: PriceRequest):
     car = {k: v for k, v in car.items() if v is not None}
     predicted = price_predictor.predict(car)
     return {"predicted_daily_rate": round(predicted, 2)}
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(req: ChatRequest):
+    if chatbot is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Chatbot not configured — set HF_API_TOKEN in .env",
+        )
+    try:
+        reply = chatbot.ask(req.message)
+    except ChatbotError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"reply": reply}
