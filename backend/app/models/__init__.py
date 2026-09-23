@@ -2,6 +2,7 @@ from app.models.user import User, AuthProvider, UserRole, VerificationStatus
 from app.models.otp import OTP, OTPPurpose
 from app.models.token_blacklist import TokenBlacklist
 from app.models.vehicle import Vehicle
+from app.models.booking import Booking, BookingInvoice
 
 __all__ = [
     "User",
@@ -12,4 +13,6 @@ __all__ = [
     "OTPPurpose",
     "TokenBlacklist",
     "Vehicle",
+    "Booking",
+    "BookingInvoice",
 ]

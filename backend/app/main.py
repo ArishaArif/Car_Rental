@@ -198,7 +198,7 @@ app.add_middleware(
 )
 
 
-from app.routers import auth, users, vehicles
+from app.routers import auth, users, vehicles, bookings
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -207,6 +207,7 @@ API_PREFIX = "/api/v1"
 app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(vehicles.router, prefix=API_PREFIX)
+app.include_router(bookings.router, prefix=API_PREFIX)
 
 
 # ── Bind custom OpenAPI ───────────────────────────────────────────────────────
