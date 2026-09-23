@@ -54,28 +54,84 @@ def normalize_fuel(raw_value: str) -> str:
     return "Other"
 
 
-def guess_body_type(name: str, seats) -> str:
+def guess_body_type_from_keywords(name: str, seats) -> str | None:
     """
-    There is no Body Type column in this dataset at all, so this is a
-    genuine (imperfect) fallback: keyword match on the car name, then
-    a seat-count heuristic as a last resort. Good enough for a class
-    project demo; call this out to your mentor as a known limitation
-    rather than presenting it as ground truth.
+    Keyword match on the car name, then a seat-count heuristic.
+    Returns None (not "Sedan") when nothing matches — the caller
+    decides what to do with an unresolved case rather than this
+    function silently guessing wrong.
     """
     text = str(name).lower()
     if any(k in text for k in ["suv", "tucson", "sportage", "cr-v", "rav4",
                                 "creta", "fortuner", "x5", "x3", "q5", "q7",
                                 "glc", "gle", "range rover", "defender"]):
         return "SUV"
-    if any(k in text for k in ["truck", "hilux", "ranger", "pickup", "f-150", "silverado"]):
+    if any(k in text for k in ["truck", "hilux", "ranger", "pickup", "f-150",
+                                "silverado", "titan", "sierra", "tundra", "ram "]):
         return "Truck"
     if any(k in text for k in ["van", "hiace", "caravan", "sprinter"]):
         return "Van"
     if any(k in text for k in ["hatch", "swift", "i10", "picanto", "polo", "fit", "ka+"]):
         return "Hatchback"
+    if any(k in text for k in ["sedan", "corolla", "civic", "camry", "accord",
+                                "altima", "jetta", "passat", "model 3", "model s"]):
+        return "Sedan"
     try:
         if float(str(seats).split("+")[0]) >= 6:
             return "SUV"
     except (ValueError, TypeError):
         pass
-    return "Sedan"
+    return None  # genuinely unresolved — caller decides, no silent Sedan default
+
+
+RENTAL_TYPE_TO_LABEL = {
+    "suv": "SUV",
+    "truck": "Truck",
+    "van": "Van",
+    "minivan": "Van",
+    "car": None,  # too generic (lumps sedan/hatchback/coupe) — fall through to keywords
+}
+
+
+def build_body_type_lookup(rental_csv_path: str = "data/raw/CarRentalData.csv") -> dict:
+    """
+    Cross-references the rental dataset's real vehicle.type field to
+    build a (make, first-word-of-model) -> body type lookup. This is
+    the primary source of truth; keyword guessing is only the fallback
+    for cars that don't appear in the rental dataset at all.
+    """
+    import pandas as pd
+
+    rentals = pd.read_csv(rental_csv_path, encoding="latin1")
+    rentals["make_u"] = rentals["vehicle.make"].str.strip().str.upper()
+    rentals["model_first"] = rentals["vehicle.model"].str.strip().str.upper().str.split().str[0]
+
+    grouped = rentals.groupby(["make_u", "model_first"])["vehicle.type"].agg(
+        lambda x: x.mode()[0]
+    )
+    lookup = {}
+    for (make, model_first), vtype in grouped.items():
+        label = RENTAL_TYPE_TO_LABEL.get(vtype)
+        if label is not None:
+            lookup[(make, model_first)] = label
+    return lookup
+
+
+def guess_body_type(name: str, company: str, seats, lookup: dict) -> str:
+    """
+    Resolution order:
+      1. Real cross-referenced data from the rental dataset (most reliable)
+      2. Keyword match on the car name
+      3. "Unclassified" — never silently defaults to "Sedan" anymore
+    """
+    company_u = str(company).strip().upper()
+    first_word = str(name).strip().upper().split()[0] if str(name).strip() else ""
+    hit = lookup.get((company_u, first_word))
+    if hit:
+        return hit
+
+    keyword_guess = guess_body_type_from_keywords(name, seats)
+    if keyword_guess:
+        return keyword_guess
+
+    return "Unclassified"
