@@ -22,20 +22,20 @@ class Settings(BaseSettings):
     FRONTEND_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8081"]
 
     # ── Database ─────────────────────────────────────
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite+aiosqlite:///./car_rental.db"
 
     # ── JWT ──────────────────────────────────────────
-    JWT_SECRET_KEY: str
-    JWT_REFRESH_SECRET_KEY: str
+    JWT_SECRET_KEY: str = "supersecretdevelopmentjwtsecretkeychangeinproduction123456"
+    JWT_REFRESH_SECRET_KEY: str = "supersecretdevelopmentjwtrefreshkeychangeinproduction123456"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── Google OAuth2 ─────────────────────────────────
-    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_ID: str = "dev-google-client-id.apps.googleusercontent.com"
 
     # ── Resend Email ─────────────────────────────────
-    RESEND_API_KEY: str
+    RESEND_API_KEY: str = "re_dev_placeholder_key"
     RESEND_FROM_EMAIL: str = "noreply@yourdomain.com"
 
     # ── OTP ──────────────────────────────────────────
