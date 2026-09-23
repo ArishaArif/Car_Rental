@@ -23,3 +23,13 @@ class PriceRequest(BaseModel):
     rating: Optional[float] = None
     renter_trips_taken: Optional[int] = None
     review_count: Optional[int] = None
+
+
+class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
