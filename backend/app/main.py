@@ -115,35 +115,72 @@ def custom_openapi():
     return schema
 
 
+import secrets
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi import Depends, HTTPException, status
+
+security = HTTPBasic()
+
+
+def authenticate_docs(credentials: HTTPBasicCredentials = Depends(security)) -> str:
+    """Protect interactive documentation with HTTP Basic Authentication."""
+    is_correct_username = secrets.compare_digest(credentials.username, "admin")
+    is_correct_password = secrets.compare_digest(credentials.password, "admin123")
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+
 app = FastAPI(
     title="Car Rental & Fleet Management API",
     version=settings.APP_VERSION,
-    summary="Complete REST API powering the Car Rental mobile application across Customer, Provider, Fleet Manager, and Admin roles.",
+    summary="Production-grade REST API powering the Car Rental platform across Customer, Provider, Fleet Manager, and Admin roles.",
     description="""
 ## Overview
 
-REST API powering the **Car Rental & Fleet Management System** mobile application.
-Supports **Customer**, **Provider**, **Fleet Manager**, and **Admin** personas.
+Asynchronous REST API engine powering the Car Rental & Fleet Management platform.
+Engineered with Python 3.12, FastAPI, SQLAlchemy 2.0 (async), and PostgreSQL.
 
 ---
 
 ## Core Capabilities
 
-1. 🔐 **Enterprise Auth**: Email/password + OTP, Google OAuth2, JWT Refresh rotation.
-2. 🚗 **Vehicle Engine**: Multi-faceted filter/search, category aggregations, fleet statistics.
-3. 📑 **Bookings & Invoices**: Real-time rate estimation, 4-digit pickup check-in, return inspection checkout, and itemized billing invoices.
-4. 🛠️ **Fleet Operations**: Maintenance logs, digital safety inspections, damage reports, and turnaround task assignment.
-5. 💼 **Provider SaaS Subscriptions**: Multi-tier host subscriptions with usage quotas and automated billing history.
-6. 📈 **Smart Dynamic Pricing**: AI demand surge, fleet utilization indexing, and rate yield recommendations.
-7. 🤖 **AI Damage Inspection**: Computer vision photo analysis detecting scratches, dents, and estimated repair costs.
-8. 🛡️ **System Admin & Verifications**: Document review queue, financial payouts, dispute resolution, and system config.
-9. 🔔 **Notifications**: Real-time app notifications and read receipts.
+1. **Enterprise Authentication**: Email/password with OTP verification, Google OAuth2, and JWT dual-token rotation with server-side blacklist revocation.
+2. **Vehicle Catalog & Search**: Multi-faceted filter engine (transmission, fuel, seats, price, location) with category aggregations and fleet telemetry.
+3. **Bookings & Automated Invoicing**: Real-time rate estimation (platform fee, tax, security deposit), 4-digit digital pickup check-in, and return checkout settlement.
+4. **Fleet Operations**: Preventative maintenance scheduling, routine safety inspections, damage reports, and depot operational tasks.
+5. **Provider SaaS Subscriptions**: Multi-tiered host plans with real-time usage quotas and billing payment history.
+6. **Smart Dynamic Pricing**: Algorithmic demand surge indexing, weekend multipliers, and yield recommendations.
+7. **Computer Vision Damage Assessment**: Multi-angle image damage detection and estimated repair quotes.
+8. **System Administration**: Platform KPIs, user directories, driver verification queues, financial payouts, and system configurations.
+9. **Notification Center**: User notification feed with read-status management and broadcast alerts.
 """,
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
+
+# ── Protected Documentation Endpoints ─────────────────────────────────────────
+@app.get("/docs", include_in_schema=False)
+async def get_swagger_documentation(_: str = Depends(authenticate_docs)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title=f"{app.title} - Swagger UI")
+
+
+@app.get("/redoc", include_in_schema=False)
+async def get_redoc_documentation(_: str = Depends(authenticate_docs)):
+    return get_redoc_html(openapi_url="/openapi.json", title=f"{app.title} - ReDoc")
+
+
+@app.get("/openapi.json", include_in_schema=False)
+async def get_open_api_endpoint(_: str = Depends(authenticate_docs)):
+    return JSONResponse(content=custom_openapi())
+
 
 # ── CORS Middleware ───────────────────────────────────────────────────────────
 app.add_middleware(

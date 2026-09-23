@@ -161,6 +161,33 @@ app/
 
 ---
 
+## Live API Documentation
+
+The REST API is live in production with HTTP Basic Auth protected interactive documentation:
+
+- **Swagger UI**: **[https://car-rental-system-backend-m5fh.onrender.com/docs](https://car-rental-system-backend-m5fh.onrender.com/docs)**
+- **ReDoc**: **[https://car-rental-system-backend-m5fh.onrender.com/redoc](https://car-rental-system-backend-m5fh.onrender.com/redoc)**
+- **Health Check**: **[https://car-rental-system-backend-m5fh.onrender.com/health](https://car-rental-system-backend-m5fh.onrender.com/health)**
+
+### Documentation Access Credentials:
+| Parameter | Value |
+|---|---|
+| **Username** | `admin` |
+| **Password** | `admin123` |
+
+---
+
+## Seed Accounts for Testing
+
+| Persona | Email | Password | Role Scope |
+|---|---|---|---|
+| **Platform Admin** | `admin@carrental.com` | `Admin@123456` | Full system governance, KPIs, verification approvals |
+| **Fleet Provider** | `host@carrental.com` | `Host@123456` | Vehicle catalog management, bookings, subscription telemetry |
+| **Fleet Manager** | `fleet@operations.com` | `Fleet@123456` | Vehicle maintenance scheduling, inspections, damage logs |
+| **Customer** | `customer@carrental.com` | `Customer@123456` | Vehicle discovery, reservations, digital pickup check-in |
+
+---
+
 ## Quickstart
 
 ```bash
@@ -179,9 +206,6 @@ python -m app.seed
 # 4. Start development server
 python run.py
 ```
-
-- **Swagger Documentation**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
-- **ReDoc Documentation**: [http://localhost:8000/api/redoc](http://localhost:8000/api/redoc)
 
 ---
 
