@@ -49,13 +49,21 @@ python -m pytest tests/ -q
 `CarRentalDataV1.csv` (same data + an `airportcity` column) is kept in
 `data/raw/` but not currently used — swap it in if you want that field later.
 
-## Known limitations (be upfront about these with your mentor)
+## Known limitations 
 
-- The recommendation dataset has **no Body Type column** — `body_type` is
-  derived with a keyword match on the car name (see
-  `recommendation/config.py: guess_body_type`), with a seat-count fallback.
-  It's not ground truth and will misclassify some cars (e.g. crossover-styled
-  sedans like the Acura RDX get tagged "Sedan" if the name doesn't hint SUV).
+- **Body type is resolved in two stages**: first by cross-referencing
+  make+model against the real `vehicle.type` field in `CarRentalData.csv`
+  (400 known make+model combos), then by keyword-matching the car name
+  for anything not found there. Cars matching neither are labeled
+  `"Unclassified"` rather than guessed — roughly **62% of the 1,217-car
+  catalog** falls here, almost entirely exotic/collector brands (Ferrari,
+  Lamborghini, Bentley, Rolls Royce, Aston Martin) that aren't realistic
+  rental-fleet inventory anyway. Worth stating this plainly if asked,
+  rather than presenting the catalog as fully classified.
+- The API rejects unrecognized field names (`extra="forbid"` on both
+  request schemas) — a typo like `"year"` instead of `"vehicle_year"`
+  now returns a `422` error instead of silently falling back to
+  defaults and returning a plausible-looking but meaningless number.
 - The price model's test R² is ~0.31 — real rental listings are noisy
   (peer-to-peer marketplace pricing varies a lot by owner, not just car
   specs), so this is an honest number, not a bug. Mention this as the
