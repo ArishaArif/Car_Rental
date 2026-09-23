@@ -11,7 +11,18 @@ from fastapi.openapi.utils import get_openapi
 
 from app.config import settings
 from app.database import create_tables
-from app.routers import auth, users
+from app.routers import (
+    auth,
+    users,
+    vehicles,
+    bookings,
+    fleet,
+    subscriptions,
+    pricing,
+    ai,
+    admin,
+    notifications,
+)
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -27,37 +38,60 @@ async def lifespan(app: FastAPI):
     print("👋 Shutting down...")
 
 
-
 # ── Tags metadata ─────────────────────────────────────────────────────────────
 tags_metadata = [
     {
         "name": "Authentication",
-        "description": (
-            "All authentication endpoints — email/password registration, OTP verification, "
-            "login, Google OAuth2, token refresh, logout, and password reset. "
-            "No `Authorization` header required unless noted."
-        ),
+        "description": "Registration, OTP verification, Google OAuth2, JWT login/refresh, logout, and password recovery.",
     },
     {
         "name": "Users",
-        "description": (
-            "Authenticated user profile endpoints. "
-            "Requires a valid **Bearer** access token in the `Authorization` header."
-        ),
+        "description": "Authenticated profiles, onboarding setup, and custom app preferences for Customer, Provider, and Fleet Managers.",
+    },
+    {
+        "name": "Vehicles",
+        "description": "Vehicle discovery catalog, multi-criteria filtering, category statistics, and provider inventory management.",
+    },
+    {
+        "name": "Bookings",
+        "description": "Reservation lifecycle, live pricing calculations, pickup check-in codes, return checkout, and itemized invoices.",
+    },
+    {
+        "name": "Fleet Operations",
+        "description": "Vehicle maintenance scheduling, routine inspections, damage reports, and turnaround operational tasks.",
+    },
+    {
+        "name": "Provider Subscriptions",
+        "description": "SaaS host tiers (Starter, Professional, Business), usage limits, upgrades, and billing history.",
+    },
+    {
+        "name": "Smart Pricing",
+        "description": "Dynamic demand surge engine, weekend/seasonal multipliers, and pricing yield recommendations.",
+    },
+    {
+        "name": "AI & Computer Vision",
+        "description": "Multi-photo vehicle damage detection, photo templates, and personalized car recommendations.",
+    },
+    {
+        "name": "System Admin",
+        "description": "Platform KPIs, user directories, document verifications, disputes, and system configuration.",
+    },
+    {
+        "name": "Notifications",
+        "description": "In-app alerts, role broadcasts, and read status management.",
     },
     {
         "name": "Health",
-        "description": "Service health and readiness check. No authentication required.",
+        "description": "Service health and readiness check.",
     },
     {
         "name": "Root",
-        "description": "API root — version and links.",
+        "description": "API root — version and navigation links.",
     },
 ]
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
-# Security scheme: adds the 🔒 Authorize button in Swagger UI
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -82,123 +116,44 @@ def custom_openapi():
 
 
 app = FastAPI(
-    title="Car Rental API",
+    title="Car Rental & Fleet Management API",
     version=settings.APP_VERSION,
-    summary="Authentication & User management for the Car Rental mobile platform.",
+    summary="Complete REST API powering the Car Rental mobile application across Customer, Provider, Fleet Manager, and Admin roles.",
     description="""
 ## Overview
 
-REST API powering the **Car Rental** React Native mobile application.
-Supports **Customer**, **Provider**, **Fleet Manager**, and **Admin** roles.
+REST API powering the **Car Rental & Fleet Management System** mobile application.
+Supports **Customer**, **Provider**, **Fleet Manager**, and **Admin** personas.
 
 ---
 
-## Authentication Methods
+## Core Capabilities
 
-| Method | How it works |
-|---|---|
-| 📧 **Email + Password** | Register → verify OTP → login → JWT |
-| 🔑 **Google OAuth2** | Send `id_token` from Google Sign-In SDK → JWT |
-| 🔄 **Token Refresh** | Exchange refresh token for new access token |
-| 🔒 **Logout** | Refresh token is blacklisted in the database |
-
----
-
-## Token Usage
-
-After login, you receive two tokens:
-
-```
-{
-  "access_token":  "eyJ...",   // Use in Authorization header · expires 30 min
-  "refresh_token": "eyJ...",   // Store securely · expires 7 days
-  "token_type":    "bearer",
-  "expires_in":    1800
-}
-```
-
-Include the access token on every protected request:
-```
-Authorization: Bearer <access_token>
-```
-
-Use the **Authorize 🔒** button at the top of this page to set your token.
-
----
-
-## Email Registration Flow
-
-```
-POST /api/v1/auth/register        → account created (unverified) + OTP emailed
-POST /api/v1/auth/verify-otp      → account activated
-POST /api/v1/auth/login           → { access_token, refresh_token }
-```
-
-## Google OAuth Flow
-
-```
-(mobile) Google Sign-In → id_token
-POST /api/v1/auth/google { id_token }  → { access_token, refresh_token }
-```
-
-## Password Reset Flow
-
-```
-POST /api/v1/auth/forgot-password  → OTP emailed
-POST /api/v1/auth/reset-password   → password updated
-```
-
----
-
-## Error Format
-
-All errors follow a consistent shape:
-
-```json
-{
-  "detail": "Human-readable error message"
-}
-```
-
-Common HTTP status codes:
-
-| Code | Meaning |
-|---|---|
-| `400` | Bad request / validation error |
-| `401` | Invalid or expired token |
-| `403` | Forbidden (account inactive / unverified) |
-| `404` | Resource not found |
-| `409` | Conflict (e.g. email already registered) |
-| `422` | Request body validation failed |
-| `500` | Internal server error |
-    """,
-    contact={
-        "name": "Car Rental Team",
-        "url": "https://github.com/ArishaArif/Car_Rental",
-    },
-    license_info={
-        "name": "MIT",
-    },
-    openapi_tags=tags_metadata,
+1. 🔐 **Enterprise Auth**: Email/password + OTP, Google OAuth2, JWT Refresh rotation.
+2. 🚗 **Vehicle Engine**: Multi-faceted filter/search, category aggregations, fleet statistics.
+3. 📑 **Bookings & Invoices**: Real-time rate estimation, 4-digit pickup check-in, return inspection checkout, and itemized billing invoices.
+4. 🛠️ **Fleet Operations**: Maintenance logs, digital safety inspections, damage reports, and turnaround task assignment.
+5. 💼 **Provider SaaS Subscriptions**: Multi-tier host subscriptions with usage quotas and automated billing history.
+6. 📈 **Smart Dynamic Pricing**: AI demand surge, fleet utilization indexing, and rate yield recommendations.
+7. 🤖 **AI Damage Inspection**: Computer vision photo analysis detecting scratches, dents, and estimated repair costs.
+8. 🛡️ **System Admin & Verifications**: Document review queue, financial payouts, dispute resolution, and system config.
+9. 🔔 **Notifications**: Real-time app notifications and read receipts.
+""",
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    lifespan=lifespan,
 )
 
-
-
-# ── CORS ──────────────────────────────────────────────────────────────────────
+# ── CORS Middleware ───────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.FRONTEND_ORIGINS,
+    allow_origins=settings.FRONTEND_ORIGINS if not settings.DEBUG else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-from app.routers import auth, users, vehicles, bookings, fleet, subscriptions, pricing, ai
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -212,6 +167,8 @@ app.include_router(fleet.router, prefix=API_PREFIX)
 app.include_router(subscriptions.router, prefix=API_PREFIX)
 app.include_router(pricing.router, prefix=API_PREFIX)
 app.include_router(ai.router, prefix=API_PREFIX)
+app.include_router(admin.router, prefix=API_PREFIX)
+app.include_router(notifications.router, prefix=API_PREFIX)
 
 
 # ── Bind custom OpenAPI ───────────────────────────────────────────────────────

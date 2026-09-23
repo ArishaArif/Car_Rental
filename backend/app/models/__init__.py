@@ -5,6 +5,8 @@ from app.models.vehicle import Vehicle
 from app.models.booking import Booking, BookingInvoice
 from app.models.fleet import MaintenanceRecord, FleetInspection, DamageReport, FleetTask
 from app.models.subscription import ProviderSubscription, BillingInvoiceRecord
+from app.models.admin import VerificationItem, PaymentRecord, DisputeRecord, SystemConfigRecord
+from app.models.notification import AppNotification
 
 __all__ = [
     "User",
@@ -23,4 +25,9 @@ __all__ = [
     "FleetTask",
     "ProviderSubscription",
     "BillingInvoiceRecord",
+    "VerificationItem",
+    "PaymentRecord",
+    "DisputeRecord",
+    "SystemConfigRecord",
+    "AppNotification",
 ]

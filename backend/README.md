@@ -7,9 +7,9 @@
 <img src="https://img.shields.io/badge/Google_OAuth2-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
 <img src="https://img.shields.io/badge/Resend-Email-000000?style=for-the-badge"/>
 
-# 🚗 Car Rental — Backend API
+# 🚗 Car Rental & Fleet Management — Backend REST API
 
-**Production-grade FastAPI authentication backend for the Car Rental mobile platform.**
+**Enterprise-grade, async FastAPI backend powering the Car Rental & Fleet Management application across Customer, Provider, Fleet Manager, and Admin roles.**
 
 [API Docs](http://localhost:8000/docs) · [ReDoc](http://localhost:8000/redoc) · [Health Check](http://localhost:8000/health)
 
@@ -19,300 +19,139 @@
 
 ## Overview
 
-This is the backend service for the **Car Rental** React Native application. It provides a complete, secure authentication system with support for email/password login, Google OAuth2, OTP email verification, JWT token management, and password reset.
-
-The frontend (React Native) connects to this API to authenticate users across four roles: **Customer**, **Provider**, **Fleet Manager**, and **Admin**.
+This is the central backend REST API for the **Car Rental & Fleet Management System**. Built on modern asynchronous Python (FastAPI, SQLAlchemy 2.0 async, asyncpg, Pydantic v2), it delivers scalable and secure APIs for vehicle discovery, live pricing calculations, digital pickup check-in, return inspection checkout, automated invoicing, fleet maintenance, provider SaaS subscriptions, AI damage detection, dynamic smart pricing, and administrative operations.
 
 ---
 
-## ✨ Features
+## ✨ System Architecture & Modules
 
-| Feature | Implementation |
-|---|---|
-| 📧 **Email/Password Auth** | Register → OTP verify → login |
-| 🔑 **Google OAuth2** | Verify Google ID token from mobile client |
-| 🎟️ **JWT Tokens** | Short-lived access (30 min) + long-lived refresh (7 days) |
-| 📬 **Email OTP** | Delivered via [Resend.com](https://resend.com) with premium HTML template |
-| 🔒 **Secure Logout** | Refresh token blacklisting in PostgreSQL |
-| 🔄 **Password Reset** | OTP-based forgot/reset password flow |
-| 🐘 **Async PostgreSQL** | SQLAlchemy 2.0 + asyncpg with connection pooling |
-| 📖 **Auto Docs** | Swagger UI `/docs` + ReDoc `/redoc` |
-| 🛡️ **Role Support** | User, Admin roles on JWT payload |
+| Module | Purpose | Key Endpoints |
+|---|---|---|
+| 🔐 **Auth & Security** | Email OTP, Google OAuth2, JWT Refresh rotation, password recovery | `/api/v1/auth/*` |
+| 👤 **Users & Profiles** | Role profiles (Customer, Provider, Fleet Manager), onboarding setup, preferences | `/api/v1/users/*` |
+| 🚗 **Vehicles Engine** | Multi-faceted filter/search, category aggregations, fleet statistics | `/api/v1/vehicles/*` |
+| 📑 **Bookings & Invoices** | Price estimator, reservations, pickup codes, return settlement & invoices | `/api/v1/bookings/*` |
+| 🛠️ **Fleet Operations** | Maintenance logs, safety inspections, damage reports, operational tasks | `/api/v1/fleet/*` |
+| 💼 **Provider Subscriptions** | SaaS host tiers (Starter, Professional, Business), usage quotas, billing history | `/api/v1/subscriptions/*` |
+| 📈 **Smart Pricing** | AI dynamic demand surge, weekend/seasonal multipliers, rate recommendations | `/api/v1/pricing/*` |
+| 🤖 **AI & Damage Inspection** | Computer vision damage detection, photo templates, vehicle recommendations | `/api/v1/ai/*` |
+| 🛡️ **System Admin** | Platform KPIs, user directories, document verifications, disputes & system config | `/api/v1/admin/*` |
+| 🔔 **Notifications** | Real-time app notifications, role broadcasts, read receipts | `/api/v1/notifications/*` |
 
 ---
 
-## Architecture
+## 📂 Project Structure
 
 ```
 backend/
 ├── app/
-│   ├── main.py              # FastAPI app · CORS · lifespan · routers
-│   ├── config.py            # pydantic-settings (env validation)
-│   ├── database.py          # Async engine · session · auto-create tables
+│   ├── main.py              # FastAPI app · CORS · lifespan · OpenAPI schemas · routers
+│   ├── config.py            # pydantic-settings (environment variable validation)
+│   ├── database.py          # Async PostgreSQL engine · session · table creation
+│   ├── seed.py              # Initial dataset seeder (test users, fleet, mock bookings)
 │   │
-│   ├── models/              # SQLAlchemy ORM (PostgreSQL)
-│   │   ├── user.py          # User — UUID PK, Google ID, role, verified flag
-│   │   ├── otp.py           # OTP — code, purpose, expiry, used flag
-│   │   └── token_blacklist.py  # Revoked refresh tokens (JTI-based)
+│   ├── models/              # SQLAlchemy 2.0 ORM Models
+│   │   ├── user.py          # User, Roles, VerificationStatus, Preferences
+│   │   ├── otp.py           # Email verification & password reset OTPs
+│   │   ├── token_blacklist.py # Blacklisted JWT refresh tokens
+│   │   ├── vehicle.py       # Vehicle catalog, specs, pricing, availability
+│   │   ├── booking.py       # Booking reservations, pricing breakdown, Invoices
+│   │   ├── fleet.py         # Maintenance, Inspections, Damage Reports, Tasks
+│   │   ├── subscription.py  # Provider SaaS Subscriptions, Billing Invoices
+│   │   ├── admin.py         # Verifications, Payment audits, Disputes, SystemConfig
+│   │   └── notification.py  # App Notifications
 │   │
-│   ├── schemas/             # Pydantic v2 request / response shapes
-│   │   ├── auth.py          # Register, Login, OTP, Google, Reset schemas
-│   │   └── user.py          # UserResponse, UpdateProfile
+│   ├── schemas/             # Strict Pydantic v2 Request/Response validation
+│   │   ├── auth.py          # Register, Login, OTP, Google OAuth2, Reset
+│   │   ├── user.py          # User profile, setup request, preferences
+│   │   ├── vehicle.py       # Vehicle CRUD, category summaries, fleet stats
+│   │   ├── booking.py       # Price estimation, booking responses, invoices
+│   │   ├── fleet.py         # Maintenance, Inspections, Damages, Tasks
+│   │   ├── subscription.py  # Plans, subscription responses, upgrades, invoices
+│   │   ├── ai.py            # Smart pricing metrics, damage analysis, recommendations
+│   │   ├── admin.py         # KPIs, verification reviews, disputes, config
+│   │   └── notification.py  # Notification responses
 │   │
-│   ├── routers/             # FastAPI route handlers
-│   │   ├── auth.py          # POST /api/v1/auth/*  (9 endpoints)
-│   │   └── users.py         # GET/PATCH /api/v1/users/me
+│   ├── routers/             # FastAPI Route Handlers (60 REST endpoints)
+│   │   ├── auth.py          # Authentication router
+│   │   ├── users.py         # User & profile router
+│   │   ├── vehicles.py      # Vehicle catalog router
+│   │   ├── bookings.py      # Bookings & invoicing router
+│   │   ├── fleet.py         # Fleet maintenance & inspections router
+│   │   ├── subscriptions.py # Provider SaaS subscriptions router
+│   │   ├── pricing.py       # Smart yield pricing router
+│   │   ├── ai.py            # AI damage analysis & recommend router
+│   │   ├── admin.py         # System administration router
+│   │   └── notifications.py # Notification center router
 │   │
-│   ├── services/            # Business logic (no HTTP concerns)
-│   │   ├── auth_service.py  # Orchestrates all auth flows
-│   │   ├── otp_service.py   # Generate · store · verify OTPs
-│   │   ├── email_service.py # Resend.com HTML email
-│   │   └── google_service.py  # Google ID token verification
+│   ├── services/            # Pure business logic layer
+│   │   ├── auth_service.py
+│   │   ├── otp_service.py
+│   │   ├── email_service.py
+│   │   ├── google_service.py
+│   │   ├── vehicle_service.py
+│   │   ├── booking_service.py
+│   │   ├── fleet_service.py
+│   │   ├── subscription_service.py
+│   │   ├── ai_service.py
+│   │   ├── admin_service.py
+│   │   └── notification_service.py
 │   │
-│   └── utils/
-│       ├── jwt.py           # create / decode access & refresh tokens
-│       ├── hashing.py       # bcrypt hash / verify
-│       └── dependencies.py  # get_current_user · get_current_admin
+│   └── utils/               # Cryptography, JWT, and Auth Dependencies
+│       ├── jwt.py
+│       ├── hashing.py
+│       └── dependencies.py  # get_current_user, get_current_admin
 │
 ├── requirements.txt
-├── run.py                   # Dev server (uvicorn --reload)
-└── .env.example             # Environment variable template
+├── run.py                   # Development server entry point
+└── .env.example             # Template for configuration
 ```
 
 ---
 
-## Quickstart
+## 🚀 Getting Started
 
-### Prerequisites
+### 1 — Environment Configuration
 
-- Python **3.11+**
-- PostgreSQL **14+** (local or cloud)
-- A [Resend.com](https://resend.com) account (free)
-- A Google Cloud project with an OAuth 2.0 Client ID
-
-### 1 — Clone & enter the backend
-
-```bash
-cd backend
-```
-
-### 2 — Create a virtual environment
-
-```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-```
-
-### 3 — Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4 — Configure environment
+Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and fill in:
+Configure your PostgreSQL connection and API keys:
 
-| Variable | Description | Where to get it |
-|---|---|---|
-| `DATABASE_URL` | `postgresql+asyncpg://user:pass@host:5432/dbname` | Your PostgreSQL instance |
-| `JWT_SECRET_KEY` | Random 64-char hex string | `python -c "import secrets; print(secrets.token_hex(32))"` |
-| `JWT_REFRESH_SECRET_KEY` | Another random 64-char hex string | Same command |
-| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID | [Google Cloud Console](https://console.cloud.google.com) → Credentials |
-| `RESEND_API_KEY` | API Key | [resend.com](https://resend.com) → API Keys |
-| `RESEND_FROM_EMAIL` | Verified sender email | Resend domain settings |
-
-### 5 — Create the database
-
-```bash
-# Using psql
-createdb car_rental_db
-
-# Or with connection string
-psql -U postgres -c "CREATE DATABASE car_rental_db;"
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/car_rental_db
+JWT_SECRET_KEY=your-32-character-access-secret
+JWT_REFRESH_SECRET_KEY=your-32-character-refresh-secret
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+RESEND_API_KEY=re_your_api_key
 ```
 
-### 6 — Run the server
+### 2 — Initialize & Seed Database
+
+```bash
+# Seed initial test accounts, vehicles, bookings, and fleet maintenance
+python -m app.seed
+```
+
+### 3 — Run Development Server
 
 ```bash
 python run.py
 ```
 
-| URL | Purpose |
-|---|---|
-| `http://localhost:8000` | API root |
-| `http://localhost:8000/docs` | **Swagger UI** (interactive) |
-| `http://localhost:8000/redoc` | ReDoc (clean reference) |
-| `http://localhost:8000/health` | Health check |
-
-> **Tables are auto-created on startup** — no migration needed for development.
+Server starts at: `http://localhost:8000`  
+Swagger UI Interactive Documentation: `http://localhost:8000/docs`
 
 ---
 
-## API Reference
+## 🔑 Seed Test Accounts
 
-### Authentication — `/api/v1/auth`
-
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `POST` | `/register` | Create account, sends OTP email | — |
-| `POST` | `/verify-otp` | Confirm 6-digit OTP → activate account | — |
-| `POST` | `/resend-otp` | Re-send OTP to email | — |
-| `POST` | `/login` | Email + password → access + refresh tokens | — |
-| `POST` | `/refresh` | Swap refresh token for new access token | — |
-| `POST` | `/logout` | Revoke refresh token | — |
-| `POST` | `/google` | Google ID token → access + refresh tokens | — |
-| `POST` | `/forgot-password` | Send password-reset OTP | — |
-| `POST` | `/reset-password` | Set new password using OTP | — |
-
-### Users — `/api/v1/users`
-
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/me` | Fetch authenticated user profile | ✅ Bearer |
-| `PATCH` | `/me` | Update name / phone / profile picture | ✅ Bearer |
-
-### System
-
-| Method | Endpoint | Description |
+| Role | Email | Password |
 |---|---|---|
-| `GET` | `/health` | Health check (no auth) |
-| `GET` | `/` | API info |
-
----
-
-## Auth Flows
-
-### Email Registration
-
-```
-POST /auth/register   { full_name, email, password }
-  → 201 · OTP sent to email
-
-POST /auth/verify-otp { email, otp_code }
-  → 200 · account activated
-
-POST /auth/login      { email, password }
-  → 200 · { access_token, refresh_token, expires_in }
-```
-
-### Google OAuth (Mobile)
-
-```
-1. Mobile app calls Google Sign-In SDK
-2. SDK returns an id_token
-
-POST /auth/google     { id_token }
-  → 200 · { access_token, refresh_token, expires_in }
-      (creates account automatically if new user)
-```
-
-### Authenticated Request
-
-```
-GET /users/me
-Authorization: Bearer <access_token>
-  → 200 · { id, full_name, email, role, ... }
-```
-
-### Token Refresh
-
-```
-POST /auth/refresh    { refresh_token }
-  → 200 · { access_token, expires_in }
-```
-
-### Password Reset
-
-```
-POST /auth/forgot-password { email }
-  → 200 · OTP sent to email
-
-POST /auth/reset-password  { email, otp_code, new_password }
-  → 200 · password updated
-```
-
----
-
-## Security Notes
-
-- **Passwords** are hashed with bcrypt (cost factor 12)
-- **Access tokens** expire in 30 minutes; signed with a dedicated secret
-- **Refresh tokens** expire in 7 days; signed with a separate secret
-- **Logout** blacklists the refresh token JTI in the database
-- **OTPs** are cryptographically random, expire in 10 minutes, and are single-use
-- **Email enumeration** is prevented — forgot password / resend OTP always return the same response regardless of whether the email exists
-- **Password strength** is validated server-side (uppercase, lowercase, digit, special character)
-
----
-
-## Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
-2. Click **Create Credentials** → **OAuth 2.0 Client ID**
-3. Choose **Android** or **iOS** (depending on your mobile target)
-4. Copy the **Client ID** into `.env` as `GOOGLE_CLIENT_ID`
-5. In the React Native app, initialise Google Sign-In with the same Client ID
-6. After the user signs in, send the `id_token` to `POST /api/v1/auth/google`
-
----
-
-## Resend Email Setup
-
-1. Sign up at [resend.com](https://resend.com) — free tier: **3,000 emails/month**
-2. Go to **API Keys** → create a key
-3. Go to **Domains** → add and verify your domain (or use `onboarding@resend.dev` for testing)
-4. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in `.env`
-
----
-
-## Frontend Integration
-
-The frontend (`authService.ts`) currently uses mock data. To connect to this backend, replace the mock calls with real HTTP requests to `http://localhost:8000/api/v1`.
-
-| Frontend method | Backend endpoint |
-|---|---|
-| `authService.register(...)` | `POST /api/v1/auth/register` |
-| `authService.verifyOtp(...)` | `POST /api/v1/auth/verify-otp` |
-| `authService.login(...)` | `POST /api/v1/auth/login` |
-| `authService.forgotPassword(...)` | `POST /api/v1/auth/forgot-password` |
-| `authService.resetPassword(...)` | `POST /api/v1/auth/reset-password` |
-| `authService.logout()` | `POST /api/v1/auth/logout` |
-
----
-
-## Development
-
-```bash
-# Run with hot reload
-python run.py
-
-# Check all routes
-curl http://localhost:8000/openapi.json | python -m json.tool | grep '"path"'
-
-# Run a quick health check
-curl http://localhost:8000/health
-```
-
----
-
-## Branch Strategy
-
-This backend lives on the `backend` branch and is merged into `main` via Pull Request.
-
-```
-main          ← stable, reviewed code only
-  └── backend ← this branch · all backend development here
-```
-
-Never push directly to `main`. Open a PR from `backend → main` for review.
-
----
-
-<div align="center">
-  <sub>Car Rental Platform · Backend Service · FastAPI + PostgreSQL</sub>
-</div>
+| **Admin** | `admin@carrental.com` | `Admin@123456` |
+| **Provider** | `provider@fleetowner.com` | `Provider@123456` |
+| **Fleet Manager** | `fleet@operations.com` | `Fleet@123456` |
+| **Customer** | `customer@carrental.com` | `Customer@123456` |
