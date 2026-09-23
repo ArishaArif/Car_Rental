@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     OTP_EXPIRE_MINUTES: int = 10
     OTP_LENGTH: int = 6
 
+    # ── Docs Security ────────────────────────────────
+    DOCS_USERNAME: str = "admin"
+    DOCS_PASSWORD: str = "admin123"
+
 
 # Singleton settings instance
 settings = Settings()

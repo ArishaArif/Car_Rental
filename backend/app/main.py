@@ -125,8 +125,8 @@ security = HTTPBasic()
 
 def authenticate_docs(credentials: HTTPBasicCredentials = Depends(security)) -> str:
     """Protect interactive documentation with HTTP Basic Authentication."""
-    is_correct_username = secrets.compare_digest(credentials.username, "admin")
-    is_correct_password = secrets.compare_digest(credentials.password, "admin123")
+    is_correct_username = secrets.compare_digest(credentials.username, settings.DOCS_USERNAME)
+    is_correct_password = secrets.compare_digest(credentials.password, settings.DOCS_PASSWORD)
     if not (is_correct_username and is_correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
