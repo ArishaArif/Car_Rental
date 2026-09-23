@@ -1,298 +1,168 @@
-<div align="center">
+# Car Rental & Fleet Management System — Backend API
 
-# 🚗 Car Rental & Fleet Management System
-### Enterprise Asynchronous REST API Engine
+An asynchronous, production-ready REST API powering multi-tenant car rental and fleet management operations. Engineered with Python 3.12, FastAPI, SQLAlchemy 2.0 (async), and PostgreSQL.
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.6-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Asyncpg-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0_Async-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org)
-[![Tests](https://img.shields.io/badge/Pytest-100%25_Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org)
-[![JWT Auth](https://img.shields.io/badge/JWT-Rotation_%26_Blacklist-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-
-<br/>
-
-**A production-ready, asynchronous backend API built with FastAPI, SQLAlchemy 2.0, and Asyncpg, powering multi-role Car Rental & Fleet Operations across Customers, Providers, Fleet Managers, and Platform Admins.**
-
-[Features](#-key-features) • [Architecture](#-system-architecture) • [API Reference](#-rest-api-endpoints-60-endpoints) • [Automated Tests](#-automated-testing-suite) • [Live Deployment](#-cloud-deployment-guide) • [Quickstart](#-quickstart-guide)
-
-</div>
+[![Python Version](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0_Async-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white)](https://docs.sqlalchemy.org/en/20/)
+[![Pytest](https://img.shields.io/badge/Tests-100%25_Passing-4CAF50?style=flat-square&logo=pytest&logoColor=white)](https://docs.pytest.org)
+[![Security](https://img.shields.io/badge/Auth-JWT_Rotation_%26_Blacklist-1A1A1A?style=flat-square)](https://jwt.io)
+[![License](https://img.shields.io/badge/License-MIT-gray?style=flat-square)](LICENSE)
 
 ---
 
-## 🌟 Key Features
+## Highlights
 
-- 🔐 **Enterprise Authentication**: Argon2/Bcrypt password hashing, dual-token JWT lifecycle (access + refresh rotation), token revocation blacklist on logout, 6-digit email OTP verification, and Google OAuth2 integration.
-- 👥 **Multi-Role Access Control**: Granular RBAC supporting `Customer`, `Provider` (Host), `FleetManager`, and `Admin` permissions.
-- 🚘 **Vehicle Catalog & Multi-Filter Search**: Category aggregations, dynamic search filtering (transmission, fuel, seats, price range, city, dates), and fleet availability states (`Available`, `Rented`, `Maintenance`, `Reserved`).
-- 📑 **Booking & Invoicing Engine**: Real-time pricing calculations (10% platform fee, 5% tax, deposits), 4-digit digital pickup check-in codes, odometer & fuel dropoff settlements, and automated itemized `BookingInvoice` generation.
-- 🛠️ **Fleet Operations Management**: Preventative maintenance scheduling, vehicle safety inspection checklists (pre-trip / post-return), damage incident logs, and depot operational tasks.
-- 💼 **Provider SaaS Subscriptions**: Multi-tiered host plans (`Starter $49`, `Professional $149`, `Business $349`), real-time vehicle & booking quota telemetry, and subscription billing history.
-- 📈 **Smart Yield Dynamic Pricing**: Demand surge index calculations, weekend multiplier, fleet utilization rates, and automated price recommendation engine.
-- 🤖 **AI Damage Inspection**: Computer vision photo analysis detecting exterior scratches, dents, estimated repair quotes, and 6-point guided vehicle photo capture templates.
-- 🛡️ **Comprehensive Admin Center**: Platform-wide KPI dashboards, user directories, host verifications, payout audits, dispute mediation, and system configuration controls.
-- 🔔 **Notification Center**: User notification feed with mark-as-read states and role-targeted broadcast alerts.
+- **Asynchronous Architecture**: Non-blocking I/O across all layers using FastAPI, `asyncpg`, and SQLAlchemy 2.0 async sessions.
+- **Strict Role-Based Access Control**: Domain separation across `Customer`, `Provider` (Host), `FleetManager`, and `Admin` personas.
+- **Dual-Token Authentication**: JWT access and refresh token lifecycle with server-side database blacklist revocation upon logout.
+- **Dynamic Pricing Engine**: Algorithmic yield pricing adjusting rates based on real-time fleet utilization, weekend surge indices, and demand trends.
+- **Vehicle Lifecycle Management**: Complete operational states (`Available`, `Rented`, `Maintenance`, `Reserved`) with inspection checklists and maintenance scheduling.
+- **Computer Vision Damage Assessment**: Image analysis pipeline for vehicle damage detection, repair cost estimation, and 6-point guided photo capture templates.
+- **Provider SaaS Billing**: Tiered subscription management (`Starter`, `Professional`, `Business`) with real-time quota telemetry and billing history.
+- **Automated Invoicing**: Reservation lifecycle settlement calculating platform commissions, taxes, security deposits, and final drop-off adjustments.
 
 ---
 
-## 🏛️ System Architecture
+## Domain Architecture
 
-```text
-├── app/
-│   ├── config.py              # Pydantic Settings with env parsing & local defaults
-│   ├── database.py            # Async engine, sessionmaker, and cross-engine base
-│   ├── main.py                # FastAPI app initialization, CORS, global error handlers
-│   ├── seed.py                # Comprehensive database seeder with demo dataset
-│   │
-│   ├── models/                # SQLAlchemy 2.0 Async ORM Models
-│   │   ├── admin.py           # KPIs, payouts, dispute logs, system configurations
-│   │   ├── booking.py         # Bookings, pricing rules, invoices
-│   │   ├── fleet.py           # Maintenance, safety inspections, damage reports, depot tasks
-│   │   ├── notification.py    # In-app notifications
-│   │   ├── otp.py             # 6-digit verification codes
-│   │   ├── subscription.py    # SaaS plans, quota telemetry, billing records
-│   │   ├── token_blacklist.py # Blacklisted revoked refresh tokens
-│   │   ├── user.py            # Users, roles, KYC verifications, customer preferences
-│   │   └── vehicle.py         # Vehicles, categories, pricing, specs
-│   │
-│   ├── routers/               # 60 REST API Endpoint Controllers (12 Swagger Tags)
-│   ├── schemas/               # Pydantic v2 validation & serialization schemas
-│   ├── services/              # Clean Business Logic & Domain Service Layer
-│   └── utils/                 # Cryptography, JWT handlers, and Auth dependencies
-│
-├── tests/                     # 100% Passing Automated Pytest Suite
-│   ├── conftest.py            # Async in-memory SQLite fixtures & auth clients
-│   └── test_*.py              # 8 domain test suites
-│
-├── .env.example               # Environment variables template
-├── pytest.ini                 # Pytest async runner configuration
-├── requirements.txt           # Production dependencies
-└── run.py                     # Local development runner
+The application is structured using layered domain-driven design principles with clear separation of concerns:
+
+```
+app/
+├── models/         # SQLAlchemy 2.0 declarative database entities
+├── schemas/        # Pydantic v2 validation & serialization contracts
+├── routers/        # FastAPI HTTP route controllers (60 endpoints across 12 tags)
+├── services/       # Domain business logic & external integrations
+├── utils/          # JWT handlers, password hashing (Argon2/Bcrypt), auth dependencies
+├── config.py       # Pydantic Settings with env parsing & local fallbacks
+├── database.py     # Async engine & session lifecycle management
+├── main.py         # Application entrypoint & CORS middleware
+└── seed.py         # Realistic demo data seeder
 ```
 
 ---
 
-## 📡 REST API Endpoints (60 Endpoints)
+## API Surface
 
-<details open>
-<summary><b>1. Authentication & Security (<code>/api/v1/auth</code>)</b></summary>
+The API exposes **60 REST endpoints** grouped by functional domains:
 
-| Method | Endpoint | Description |
+| Domain | Base Path | Description |
 |---|---|---|
-| `POST` | `/api/v1/auth/register` | Register new user account with role selection |
-| `POST` | `/api/v1/auth/login` | Authenticate user & issue access + refresh JWT |
-| `POST` | `/api/v1/auth/refresh` | Refresh access token using valid refresh token |
-| `POST` | `/api/v1/auth/logout` | Revoke & blacklist refresh token |
-| `POST` | `/api/v1/auth/google` | Google OAuth2 ID token authentication |
-| `POST` | `/api/v1/auth/verify-otp` | Verify 6-digit email OTP |
-| `POST` | `/api/v1/auth/resend-otp` | Request new OTP verification code |
-| `POST` | `/api/v1/auth/forgot-password` | Initiate password recovery via email |
-| `POST` | `/api/v1/auth/reset-password` | Reset password using verified OTP |
+| **Authentication** | `/api/v1/auth` | Registration, login, OTP verification, Google OAuth2, token refresh, and logout |
+| **Users** | `/api/v1/users` | Profile retrieval, onboarding KYC setup, user preferences |
+| **Vehicles** | `/api/v1/vehicles` | Multi-parameter search, category metrics, fleet status, CRUD listings |
+| **Bookings** | `/api/v1/bookings` | Price calculation, reservation lifecycle, 4-digit pickup check-in, invoices |
+| **Fleet Operations** | `/api/v1/fleet` | Scheduled maintenance, safety inspections, damage reports, operational tasks |
+| **Subscriptions** | `/api/v1/subscriptions` | Host SaaS tiers, usage quotas, tier upgrades, invoice history |
+| **Smart Pricing** | `/api/v1/pricing` | Utilization surge metrics and 1-click price recommendations |
+| **AI Services** | `/api/v1/ai` | Damage detection analysis, 6-point capture templates, vehicle recommendations |
+| **Administration** | `/api/v1/admin` | Platform KPIs, user management, KYC approvals, disputes, system configs |
+| **Notifications** | `/api/v1/notifications` | User alerts, status updates, broadcast notifications |
 
-</details>
-
-<details>
-<summary><b>2. Users & Profiles (<code>/api/v1/users</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/users/me` | Retrieve authenticated user profile |
-| `PATCH` | `/api/v1/users/me` | Update authenticated user details |
-| `POST` | `/api/v1/users/profile-setup` | Complete onboarding KYC & profile setup |
-| `PUT` | `/api/v1/users/preferences` | Update customer currency, language, notification preferences |
-| `GET` | `/api/v1/users/{user_id}` | Public profile lookup |
-
-</details>
-
-<details>
-<summary><b>3. Vehicle Catalog & Fleet Discovery (<code>/api/v1/vehicles</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/vehicles` | Search & filter vehicles by price, seats, fuel, category, city |
-| `GET` | `/api/v1/vehicles/categories` | Aggregated category summaries with icons & metrics |
-| `GET` | `/api/v1/vehicles/stats` | Provider & Fleet status metrics (Available, Rented, Maintenance) |
-| `GET` | `/api/v1/vehicles/{vehicle_id}` | Detailed vehicle specifications & rental policies |
-| `POST` | `/api/v1/vehicles` | Add new vehicle to fleet |
-| `PATCH` | `/api/v1/vehicles/{vehicle_id}` | Update vehicle listing details |
-| `POST` | `/api/v1/vehicles/{vehicle_id}/publish` | Publish vehicle to public catalog |
-| `POST` | `/api/v1/vehicles/{vehicle_id}/unpublish` | Delist vehicle from public search |
-| `DELETE` | `/api/v1/vehicles/{vehicle_id}` | Archive / delete vehicle unit |
-
-</details>
-
-<details>
-<summary><b>4. Bookings & Invoicing (<code>/api/v1/bookings</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/bookings/calculate-pricing` | Real-time pricing breakdown with taxes & platform fee |
-| `POST` | `/api/v1/bookings` | Create reservation & generate 4-digit pickup code |
-| `GET` | `/api/v1/bookings` | List user bookings by role and status |
-| `GET` | `/api/v1/bookings/{id}` | Booking details & status timeline |
-| `POST` | `/api/v1/bookings/{id}/confirm` | Provider confirmation of reservation |
-| `POST` | `/api/v1/bookings/{id}/cancel` | Cancel booking & release vehicle |
-| `POST` | `/api/v1/bookings/{id}/pickup` | Validate pickup code & start rental |
-| `POST` | `/api/v1/bookings/{id}/return` | Record dropoff odometer/fuel & settle charges |
-| `GET` | `/api/v1/bookings/{id}/invoice` | Retrieve itemized digital invoice receipt |
-| `GET` | `/api/v1/bookings/revenue/metrics` | Host revenue KPIs, top vehicles, utilization rates |
-
-</details>
-
-<details>
-<summary><b>5. Fleet Operations (<code>/api/v1/fleet</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/fleet/maintenance` | List maintenance service logs |
-| `POST` | `/api/v1/fleet/maintenance` | Schedule service & set vehicle to Maintenance |
-| `PATCH` | `/api/v1/fleet/maintenance/{id}` | Complete maintenance service & release vehicle |
-| `GET` | `/api/v1/fleet/inspections` | Inspection checklists & safety logs |
-| `POST` | `/api/v1/fleet/inspections` | Record pre-trip or post-return inspection |
-| `GET` | `/api/v1/fleet/damages` | Damage incident reports |
-| `POST` | `/api/v1/fleet/damages` | File new vehicle damage report |
-| `PATCH` | `/api/v1/fleet/damages/{id}` | Update damage resolution status |
-| `GET` | `/api/v1/fleet/tasks` | Operational depot task board |
-| `POST` | `/api/v1/fleet/tasks` | Create depot operational task |
-| `PATCH` | `/api/v1/fleet/tasks/{id}` | Update task status |
-
-</details>
-
-<details>
-<summary><b>6. SaaS Subscriptions (<code>/api/v1/subscriptions</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/subscriptions/plans` | List available provider subscription plans |
-| `GET` | `/api/v1/subscriptions/current` | Active subscription & usage quota telemetry |
-| `POST` | `/api/v1/subscriptions/upgrade` | Upgrade subscription tier & generate invoice |
-| `GET` | `/api/v1/subscriptions/invoices` | Provider billing payment history |
-
-</details>
-
-<details>
-<summary><b>7. Smart Pricing & AI (<code>/api/v1/pricing</code> & <code>/api/v1/ai</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/pricing/metrics/{id}` | Vehicle demand surge multipliers & rate suggestions |
-| `POST` | `/api/v1/pricing/apply-recommendation` | 1-Click apply recommended pricing |
-| `POST` | `/api/v1/ai/damage-analysis` | Computer vision damage detection & repair estimate |
-| `GET` | `/api/v1/ai/photo-templates` | 6-Point vehicle photography capture guide |
-| `POST` | `/api/v1/ai/recommend` | Matchmaking recommendations based on budget |
-
-</details>
-
-<details>
-<summary><b>8. Administration & Notifications (<code>/api/v1/admin</code> & <code>/api/v1/notifications</code>)</b></summary>
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/admin/kpis` | Platform-wide revenue, users, fleet, dispute KPIs |
-| `GET` | `/api/v1/admin/users` | Platform user directory |
-| `PATCH` | `/api/v1/admin/users/{id}/status` | Activate or suspend user account |
-| `GET` | `/api/v1/admin/providers` | Host provider directory with fleet stats |
-| `GET` | `/api/v1/admin/verifications` | Driver license & business KYC queue |
-| `POST` | `/api/v1/admin/verifications/{id}/review` | Approve or reject verification request |
-| `GET` | `/api/v1/admin/payments` | Financial payout audit trails |
-| `GET` | `/api/v1/admin/disputes` | Customer-Provider dispute resolution queue |
-| `PATCH` | `/api/v1/admin/disputes/{id}` | Resolve dispute & issue refunds |
-| `GET` | `/api/v1/admin/config` | System commission rate & category configurations |
-| `PATCH` | `/api/v1/admin/config` | Update platform operational settings |
-| `GET` | `/api/v1/notifications` | User notification inbox |
-| `PATCH` | `/api/v1/notifications/{id}/read` | Mark individual notification as read |
-| `POST` | `/api/v1/notifications/mark-all-read` | Mark all notifications as read |
-
-</details>
+Interactive OpenAPI documentation is available locally at `/api/docs` (Swagger UI) and `/api/redoc` (ReDoc).
 
 ---
 
-## 🧪 Automated Testing Suite
+## Getting Started
 
-The repository includes a comprehensive, asynchronous Pytest test suite using an in-memory SQLite database runner with zero external dependencies required for testing.
+### Prerequisites
+
+- Python 3.12+
+- PostgreSQL (or local SQLite for zero-dependency development)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mzaid-dev/car-rental-system-backend.git
+   cd car-rental-system-backend
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   *(The application includes sensible local development defaults and runs out of the box).*
+
+5. **Seed demo data (optional):**
+   ```bash
+   python -m app.seed
+   ```
+
+6. **Start the development server:**
+   ```bash
+   python run.py
+   ```
+   The API server will start on `http://localhost:8000`.
+
+---
+
+## Seed Accounts for Testing
+
+When seeded, the database contains pre-configured accounts for each role:
+
+| Persona | Email | Password | Role Scope |
+|---|---|---|---|
+| **Platform Admin** | `admin@carrental.com` | `Admin@123456` | Full system governance, KPIs, verification approvals |
+| **Fleet Provider** | `host@carrental.com` | `Host@123456` | Vehicle catalog management, bookings, subscription telemetry |
+| **Fleet Manager** | `fleet@operations.com` | `Fleet@123456` | Vehicle maintenance scheduling, inspections, damage logs |
+| **Customer** | `customer@carrental.com` | `Customer@123456` | Vehicle discovery, reservations, digital pickup check-in |
+
+---
+
+## Testing
+
+The project includes an end-to-end automated test suite built on `pytest` and `pytest-asyncio`. Tests execute against an isolated in-memory SQLite database and test client with zero external infrastructure required.
 
 ```bash
-# Run full automated test suite with verbose output
+# Execute full test suite
 pytest -v
 ```
 
-### Test Coverage Breakdown:
-| Test Suite | Domain Tested | Result |
-|---|---|:---:|
-| `test_auth_and_users.py` | Registration, login, profile setup, preferences | **PASSED** ✅ |
-| `test_otp_and_password_reset.py` | OTP verification, token rotation, logout blacklist, reset password | **PASSED** ✅ |
-| `test_vehicles.py` | Catalog CRUD, multi-filter search, stats, category metrics | **PASSED** ✅ |
-| `test_bookings.py` | Pricing calculator, reservation lifecycle, pickup code, dropoff invoice | **PASSED** ✅ |
-| `test_fleet_operations.py` | Maintenance service, safety checks, damage incident logs, depot tasks | **PASSED** ✅ |
-| `test_subscriptions.py` | SaaS host tiers, quota limits, plan upgrades, billing logs | **PASSED** ✅ |
-| `test_ai_and_pricing.py` | Dynamic surge multipliers, AI damage scanner, photo templates | **PASSED** ✅ |
-| `test_admin_and_notifications.py` | Platform KPIs, user directory, KYC review, dispute resolution | **PASSED** ✅ |
+### Test Coverage Overview
+
+- **Auth & Lifecycle**: Registration, email OTP verification, token refresh rotation, and blacklist validation upon logout.
+- **Vehicle Catalog**: Search query filters (fuel, transmission, seats, price, availability), category metrics, and fleet statistics.
+- **Booking Engine**: Dynamic rate calculation, 4-digit pickup code verification, drop-off settlement, and invoice generation.
+- **Fleet Workflows**: Maintenance service lifecycle, pre/post trip inspection checklists, and damage logs.
+- **SaaS Subscriptions**: Plan tier upgrades, quota limits, and billing history.
+- **AI & Pricing**: Surge pricing multipliers and computer vision damage analysis endpoints.
+- **Administration**: KPI aggregations, user directory status controls, and KYC reviews.
 
 ---
 
-## 🚀 Quickstart Guide
+## Production Deployment
 
-### 1. Clone & Setup Virtual Environment
-```bash
-git clone https://github.com/mzaid-dev/car-rental-system-backend.git
-cd car-rental-system-backend
+### Container / Cloud Service (e.g. Render, Railway, Fly.io)
 
-python -m venv venv
-source venv/bin/activate    # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment (.env)
-```bash
-cp .env.example .env
-```
-*(Out of the box, default development values are provided for local execution).*
-
-### 3. Seed Initial Demo Dataset
-```bash
-python -m app.seed
-```
-
-### 4. Start Development Server
-```bash
-python run.py
-```
-- Interactive Swagger UI: **[http://localhost:8000/api/docs](http://localhost:8000/api/docs)**
-- ReDoc Documentation: **[http://localhost:8000/api/redoc](http://localhost:8000/api/redoc)**
-
----
-
-## 🔑 Demo Test Accounts
-
-| Role | Email | Password |
-|---|---|---|
-| **Admin** | `admin@carrental.com` | `Admin@123456` |
-| **Provider (Host)** | `host@carrental.com` | `Host@123456` |
-| **Fleet Manager** | `fleet@operations.com` | `Fleet@123456` |
-| **Customer** | `customer@carrental.com` | `Customer@123456` |
-
----
-
-## ☁️ Cloud Deployment Guide
-
-### Deploying to Render.com (Free Web Service) + Neon.tech (PostgreSQL):
-1. Create a free serverless PostgreSQL database on **[Neon.tech](https://neon.tech/)**.
-2. Connect your GitHub repository to **[Render.com](https://render.com/)**.
-3. Create a **New Web Service**:
+1. Connect your repository to your hosting platform.
+2. Configure build and start commands:
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. In Render **Environment Variables**, add:
-   - `DATABASE_URL`: `postgresql+asyncpg://user:pass@ep-xyz.neon.tech/neondb?ssl=require`
-   - `JWT_SECRET_KEY`: `your-random-32-character-secret`
-   - `JWT_REFRESH_SECRET_KEY`: `your-random-32-character-refresh-secret`
-5. Click **Deploy** — your live API and Swagger docs are ready!
+3. Supply production environment variables:
+   ```env
+   DATABASE_URL=postgresql+asyncpg://<USER>:<PASSWORD>@<HOST>:<PORT>/<DB_NAME>?ssl=require
+   JWT_SECRET_KEY=<32_CHARACTER_RANDOM_SECRET>
+   JWT_REFRESH_SECRET_KEY=<32_CHARACTER_RANDOM_SECRET>
+   GOOGLE_CLIENT_ID=<GOOGLE_OAUTH_CLIENT_ID>
+   RESEND_API_KEY=<RESEND_API_KEY>
+   ```
 
 ---
 
-## 📄 License
-Distributed under the **MIT License**. See `LICENSE` for more information.
+## License
 
-<div align="center">
-Built with modern software engineering best practices by <b>Muhammad Zaid</b>.
-</div>
+This project is licensed under the [MIT License](LICENSE).
