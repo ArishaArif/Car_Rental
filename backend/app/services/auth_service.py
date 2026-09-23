@@ -50,6 +50,8 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
         email=data.email,
         hashed_password=hash_password(data.password),
         auth_provider=AuthProvider.EMAIL,
+        role=data.role or UserRole.CUSTOMER,
+        phone_number=data.phone_number,
         is_email_verified=False,
     )
     db.add(user)

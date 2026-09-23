@@ -5,11 +5,16 @@ from typing import Optional
 import re
 
 
+from app.models.user import UserRole
+
+
 # ── Register ──────────────────────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100, examples=["John Doe"])
     email: EmailStr = Field(..., examples=["john@example.com"])
     password: str = Field(..., min_length=8, max_length=128, examples=["StrongPass@123"])
+    role: Optional[UserRole] = Field(default=UserRole.CUSTOMER, examples=[UserRole.CUSTOMER])
+    phone_number: Optional[str] = Field(default=None, max_length=30, examples=["+1 (555) 234-5678"])
 
     @field_validator("password")
     @classmethod
