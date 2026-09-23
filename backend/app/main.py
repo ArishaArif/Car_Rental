@@ -198,7 +198,7 @@ app.add_middleware(
 )
 
 
-from app.routers import auth, users, vehicles, bookings, fleet, subscriptions
+from app.routers import auth, users, vehicles, bookings, fleet, subscriptions, pricing, ai
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -210,6 +210,8 @@ app.include_router(vehicles.router, prefix=API_PREFIX)
 app.include_router(bookings.router, prefix=API_PREFIX)
 app.include_router(fleet.router, prefix=API_PREFIX)
 app.include_router(subscriptions.router, prefix=API_PREFIX)
+app.include_router(pricing.router, prefix=API_PREFIX)
+app.include_router(ai.router, prefix=API_PREFIX)
 
 
 # ── Bind custom OpenAPI ───────────────────────────────────────────────────────
