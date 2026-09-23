@@ -4,6 +4,7 @@ from app.models.token_blacklist import TokenBlacklist
 from app.models.vehicle import Vehicle
 from app.models.booking import Booking, BookingInvoice
 from app.models.fleet import MaintenanceRecord, FleetInspection, DamageReport, FleetTask
+from app.models.subscription import ProviderSubscription, BillingInvoiceRecord
 
 __all__ = [
     "User",
@@ -20,4 +21,6 @@ __all__ = [
     "FleetInspection",
     "DamageReport",
     "FleetTask",
+    "ProviderSubscription",
+    "BillingInvoiceRecord",
 ]
