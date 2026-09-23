@@ -163,10 +163,9 @@ app/
 
 ## Live API Documentation
 
-The REST API is live in production with HTTP Basic Auth protected interactive documentation:
+The REST API is live in production with HTTP Basic Auth protected interactive Swagger UI documentation:
 
-- **Swagger UI**: **[https://car-rental-system-backend-m5fh.onrender.com/docs](https://car-rental-system-backend-m5fh.onrender.com/docs)**
-- **ReDoc**: **[https://car-rental-system-backend-m5fh.onrender.com/redoc](https://car-rental-system-backend-m5fh.onrender.com/redoc)**
+- **Interactive Swagger UI**: **[https://car-rental-system-backend-m5fh.onrender.com/docs](https://car-rental-system-backend-m5fh.onrender.com/docs)**
 - **Health Check**: **[https://car-rental-system-backend-m5fh.onrender.com/health](https://car-rental-system-backend-m5fh.onrender.com/health)**
 
 ### Documentation Access Credentials:

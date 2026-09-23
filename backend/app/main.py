@@ -117,7 +117,7 @@ def custom_openapi():
 
 import secrets
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi import Depends, HTTPException, status
 
 security = HTTPBasic()
@@ -170,11 +170,6 @@ Engineered with Python 3.12, FastAPI, SQLAlchemy 2.0 (async), and PostgreSQL.
 @app.get("/docs", include_in_schema=False)
 async def get_swagger_documentation(_: str = Depends(authenticate_docs)):
     return get_swagger_ui_html(openapi_url="/openapi.json", title=f"{app.title} - Swagger UI")
-
-
-@app.get("/redoc", include_in_schema=False)
-async def get_redoc_documentation(_: str = Depends(authenticate_docs)):
-    return get_redoc_html(openapi_url="/openapi.json", title=f"{app.title} - ReDoc")
 
 
 @app.get("/openapi.json", include_in_schema=False)
