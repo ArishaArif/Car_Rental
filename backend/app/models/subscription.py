@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Float, Integer, ForeignKey, JSON, DateTime
+from sqlalchemy import String, Float, Integer, ForeignKey, JSON, DateTime, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
 
@@ -16,7 +15,7 @@ class ProviderSubscription(Base):
         String(50), primary_key=True, default=lambda: f"sub-{uuid.uuid4().hex[:8]}"
     )
     provider_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
     )
     plan_id: Mapped[str] = mapped_column(String(50), default="starter", nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="Active", nullable=False)
@@ -45,8 +44,9 @@ class BillingInvoiceRecord(Base):
     )
     invoice_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     provider_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
+
     date: Mapped[str] = mapped_column(String(30), nullable=False)
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     plan_name: Mapped[str] = mapped_column(String(60), nullable=False)

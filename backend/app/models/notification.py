@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
 
@@ -16,8 +15,9 @@ class AppNotification(Base):
         String(50), primary_key=True, default=lambda: f"notif-{uuid.uuid4().hex[:6]}"
     )
     user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
+
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
     category: Mapped[str] = mapped_column(String(50), default="System", nullable=False, index=True)

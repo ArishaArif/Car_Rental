@@ -1,12 +1,10 @@
-"""
-Core authentication service — orchestrates all auth operations.
-"""
-
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+
 
 from app.models.user import User, AuthProvider
 from app.models.token_blacklist import TokenBlacklist
@@ -171,8 +169,10 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str) -> AccessTo
         )
 
     # Fetch user
-    result = await db.execute(select(User).where(User.id == user_id))
+    user_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
+    result = await db.execute(select(User).where(User.id == user_uuid))
     user = result.scalar_one_or_none()
+
 
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
@@ -199,9 +199,10 @@ async def logout_user(db: AsyncSession, refresh_token: str) -> dict:
         exp_ts = payload.get("exp")
         expires_at = datetime.fromtimestamp(exp_ts, tz=timezone.utc)
 
+        user_uuid = uuid.UUID(str(user_id)) if user_id else None
         bl = TokenBlacklist(
             token_jti=jti,
-            user_id=user_id,
+            user_id=user_uuid,
             expires_at=expires_at,
         )
         db.add(bl)

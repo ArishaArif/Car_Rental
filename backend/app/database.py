@@ -8,13 +8,18 @@ from app.config import settings
 
 
 # ── Engine ────────────────────────────────────────────────────────────────────
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-)
+engine_kwargs = {"echo": settings.DEBUG}
+if not settings.DATABASE_URL.startswith("sqlite"):
+    engine_kwargs.update(
+        {
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_pre_ping": True,
+        }
+    )
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
+
 
 # ── Session Factory ───────────────────────────────────────────────────────────
 AsyncSessionLocal = async_sessionmaker(
@@ -48,8 +53,23 @@ async def get_db() -> AsyncSession:
 # ── Create all tables ─────────────────────────────────────────────────────────
 async def create_tables():
     """Called on app startup to create all tables."""
-    # Import models so Base knows about them
-    from app.models import user, otp, token_blacklist  # noqa: F401
+    # Import all models so Base metadata is completely populated
+    from app.models import (  # noqa: F401
+        user,
+        otp,
+        token_blacklist,
+        vehicle,
+        booking,
+        fleet,
+        subscription,
+        admin,
+        notification,
+    )
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+# Alias for seeder / test setup
+init_db = create_tables
+

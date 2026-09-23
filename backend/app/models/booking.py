@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, Float, Integer, ForeignKey, JSON
+from sqlalchemy import String, DateTime, Float, Integer, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
 
@@ -19,8 +18,9 @@ class Booking(Base):
         String(50), ForeignKey("vehicles.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     customer_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
+
 
     # Rental Schedule & Route
     pickup_date: Mapped[str] = mapped_column(String(30), nullable=False)

@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, Float, Integer, ForeignKey, JSON
+from sqlalchemy import String, Boolean, DateTime, Float, Integer, ForeignKey, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
 
@@ -16,8 +15,9 @@ class Vehicle(Base):
         String(50), primary_key=True, default=lambda: f"veh-{uuid.uuid4().hex[:8]}"
     )
     provider_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        Uuid, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
+
     brand: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     model: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     year: Mapped[int] = mapped_column(Integer, nullable=False)

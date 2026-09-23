@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum as SAEnum
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum as SAEnum, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
 import enum
 
 from app.database import Base
@@ -19,14 +18,15 @@ class OTP(Base):
     __tablename__ = "otps"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        Uuid, primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+
     code: Mapped[str] = mapped_column(String(10), nullable=False)
     purpose: Mapped[OTPPurpose] = mapped_column(
         SAEnum(OTPPurpose), nullable=False
