@@ -478,7 +478,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   kpiCard: {
-    width: '48%',
+    flexBasis: '47%',
+    flexGrow: 1,
     borderWidth: 1,
     minHeight: 104,
     justifyContent: 'space-between',
@@ -538,7 +539,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   moduleCard: {
-    width: '48%',
+    flexBasis: '47%',
+    flexGrow: 1,
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,

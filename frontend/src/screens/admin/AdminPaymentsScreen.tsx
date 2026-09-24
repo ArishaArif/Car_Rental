@@ -340,7 +340,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryCard: {
-    width: '48%',
+    flexBasis: '47%',
+    flexGrow: 1,
     borderWidth: 1,
     minHeight: 76,
     justifyContent: 'center',

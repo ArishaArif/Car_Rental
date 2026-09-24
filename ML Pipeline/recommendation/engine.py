@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-from .config import COLUMNS as C, RAW_CSV_PATH, normalize_fuel, guess_body_type
+from .config import COLUMNS as C, RAW_CSV_PATH, normalize_fuel, guess_body_type, build_body_type_lookup
 
 
 def _parse_price(raw) -> float:
@@ -74,8 +74,11 @@ class CarRecommender:
         df["seats_n"] = df[C["seats"]].apply(_parse_seats)
         df["hp_n"] = df[C["hp"]].apply(_parse_hp)
         df["fuel_norm"] = df[C["fuel"]].apply(normalize_fuel)
+
+        body_type_lookup = build_body_type_lookup()
         df["body_type"] = [
-            guess_body_type(n, s) for n, s in zip(df[C["name"]], df[C["seats"]])
+            guess_body_type(n, co, s, body_type_lookup)
+            for n, co, s in zip(df[C["name"]], df[C["company"]], df[C["seats"]])
         ]
 
         df = df.dropna(subset=["price_usd"])

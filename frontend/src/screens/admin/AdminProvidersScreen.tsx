@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList, AdminProviderRecord, VerificationStatus } from '../../types';
 import { useTheme } from '../../theme';
@@ -391,90 +391,92 @@ export const AdminProvidersScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.modalBody}>
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Business Name</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
-                        {selectedProvider.businessName}
-                      </Text>
-                    </View>
+                  <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollBody} contentContainerStyle={styles.modalScrollContent}>
+                    <View style={styles.modalBody}>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Business Name</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
+                          {selectedProvider.businessName}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Principal Host</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedProvider.providerName}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Principal Host</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedProvider.providerName}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Business Email</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedProvider.email}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Business Email</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedProvider.email}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Direct Phone</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedProvider.phone}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Direct Phone</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedProvider.phone}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Operating Depot</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedProvider.city}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Operating Depot</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedProvider.city}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Corporate Tax ID</Text>
-                      <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
-                        {selectedProvider.taxId || 'N/A'}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Corporate Tax ID</Text>
+                        <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
+                          {selectedProvider.taxId || 'N/A'}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Fleet Capacity</Text>
-                      <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '800' }]}>
-                        {selectedProvider.fleetSize} Active Vehicles
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Fleet Capacity</Text>
+                        <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '800' }]}>
+                          {selectedProvider.fleetSize} Active Vehicles
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Cumulative Revenue</Text>
-                      <Text style={[styles.dossierValue, { color: colors.success || '#10B981', fontWeight: '800' }]}>
-                        ${selectedProvider.revenue.toLocaleString()}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Cumulative Revenue</Text>
+                        <Text style={[styles.dossierValue, { color: colors.success || '#10B981', fontWeight: '800' }]}>
+                          ${selectedProvider.revenue.toLocaleString()}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>KYC Verification</Text>
-                      <Text
-                        style={[
-                          styles.dossierValue,
-                          { color: getStatusBadge(selectedProvider.verificationStatus).text, fontWeight: '700' },
-                        ]}
-                      >
-                        {selectedProvider.verificationStatus}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>KYC Verification</Text>
+                        <Text
+                          style={[
+                            styles.dossierValue,
+                            { color: getStatusBadge(selectedProvider.verificationStatus).text, fontWeight: '700' },
+                          ]}
+                        >
+                          {selectedProvider.verificationStatus}
+                        </Text>
+                      </View>
 
-                    <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Host Status</Text>
-                      <Text
-                        style={[
-                          styles.dossierValue,
-                          {
-                            color: selectedProvider.status === 'Active' ? colors.success || '#10B981' : colors.danger,
-                            fontWeight: '800',
-                          },
-                        ]}
-                      >
-                        {selectedProvider.status.toUpperCase()}
-                      </Text>
+                      <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Host Status</Text>
+                        <Text
+                          style={[
+                            styles.dossierValue,
+                            {
+                              color: selectedProvider.status === 'Active' ? colors.success || '#10B981' : colors.danger,
+                              fontWeight: '800',
+                            },
+                          ]}
+                        >
+                          {selectedProvider.status.toUpperCase()}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  </ScrollView>
 
                   <View style={styles.modalFooter}>
                     {selectedProvider.verificationStatus !== 'Verified' && (
@@ -645,6 +647,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalScrollBody: {
+    flexShrink: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 4,
   },
   modalBody: {
     marginBottom: 16,

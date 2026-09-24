@@ -1,8 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class RecommendationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # unknown fields -> 422, not silently ignored
+
     body_type: Optional[str] = None      # "SUV" | "Sedan" | "Hatchback" | "Truck" | "Van"
     fuel_norm: Optional[str] = None       # "Petrol" | "Diesel" | "Hybrid" | "Electric" | "Hydrogen"
     seats_n: Optional[float] = None
@@ -11,6 +13,8 @@ class RecommendationRequest(BaseModel):
 
 
 class PriceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     vehicle_make: Optional[str] = None
     vehicle_type: Optional[str] = None    # "suv" | "car" | "truck" | "minivan" | "van"
     vehicle_year: Optional[int] = None
@@ -19,3 +23,13 @@ class PriceRequest(BaseModel):
     rating: Optional[float] = None
     renter_trips_taken: Optional[int] = None
     review_count: Optional[int] = None
+
+
+class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str

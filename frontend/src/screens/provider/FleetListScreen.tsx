@@ -165,8 +165,8 @@ export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => navigation.navigate('VehicleDetails', { vehicleId: item.id })}
               style={[styles.smallBtn, { backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.sm }]}
             >
-              <Text style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
-                View Specs
+              <Text numberOfLines={1} style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
+                Specs
               </Text>
             </TouchableOpacity>
 
@@ -174,7 +174,7 @@ export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => navigation.navigate('EditVehicle', { vehicleId: item.id })}
               style={[styles.smallBtn, { backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.sm }]}
             >
-              <Text style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
+              <Text numberOfLines={1} style={{ color: colors.textPrimary, fontSize: 11, fontWeight: '700' }}>
                 Edit
               </Text>
             </TouchableOpacity>
@@ -183,7 +183,7 @@ export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
               onPress={() => navigation.navigate('VehicleAvailability', { vehicleId: item.id })}
               style={[styles.smallBtn, { backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.sm }]}
             >
-              <Text style={{ color: colors.secondary, fontSize: 11, fontWeight: '700' }}>
+              <Text numberOfLines={1} style={{ color: colors.secondary, fontSize: 11, fontWeight: '700' }}>
                 Status
               </Text>
             </TouchableOpacity>
@@ -199,6 +199,7 @@ export const FleetListScreen: React.FC<Props> = ({ navigation, route }) => {
               ]}
             >
               <Text
+                numberOfLines={1}
                 style={{
                   color: isPublished ? colors.danger : colors.accent,
                   fontSize: 11,
@@ -374,11 +375,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    gap: 6,
+    gap: 5,
   },
   smallBtn: {
     flex: 1,
     paddingVertical: 7,
+    paddingHorizontal: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

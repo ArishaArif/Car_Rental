@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useTheme } from '../../theme';
@@ -12,7 +13,8 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
-  const { colors, typography, spacing, borderRadius } = useTheme();
+  const { colors, typography, spacing, borderRadius, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated, user } = useAuth();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const scaleAnim = React.useRef(new Animated.Value(0.92)).current;
@@ -45,6 +47,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+      />
       {/* Decorative ambient background glows */}
       <View
         style={[
@@ -134,7 +139,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
       </Animated.View>
 
       {/* Footer System Version */}
-      <View style={[styles.footer, { paddingBottom: spacing.lg }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         <Text style={[styles.versionText, { color: colors.textMuted }]}>
           v1.0.0 Enterprise Build
         </Text>
@@ -197,7 +202,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 0,
   },
   versionText: {
     fontSize: 11,

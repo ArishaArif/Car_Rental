@@ -2,14 +2,17 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AIMessage, ChatBubble, ChatInput, VoiceInputModal } from '../../../components/ai';
@@ -33,7 +36,8 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { colors, typography, borderRadius } = useTheme();
+  const { colors, typography, borderRadius, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const [language, setLanguage] = useState<LanguageMode>(
     route.params?.initialLanguage || 'English'
@@ -42,9 +46,38 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
   const initialQueryExecuted = useRef(false);
+
+  const scrollToBottom = useCallback((animated: boolean = true) => {
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToEnd({ animated });
+    });
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated });
+    }, 100);
+  }, []);
+
+  // Monitor keyboard appearance to automatically keep latest messages in view
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+      scrollToBottom(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [scrollToBottom]);
 
   const handleSendMessage = useCallback(
     async (textToSend?: string, isVoice: boolean = false) => {
@@ -62,10 +95,14 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
       setMessages(prev => [...prev, userMsg]);
       setInputText('');
       setIsProcessing(true);
+      scrollToBottom(true);
+      setTimeout(() => scrollToBottom(true), 120);
 
       try {
         const aiReply = await aiService.sendMessage(text, language);
         setMessages(prev => [...prev, aiReply]);
+        scrollToBottom(true);
+        setTimeout(() => scrollToBottom(true), 150);
       } catch {
         const errorMsg: ChatMessage = {
           id: `err-${Date.now()}`,
@@ -75,17 +112,20 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
           language,
         };
         setMessages(prev => [...prev, errorMsg]);
+        scrollToBottom(true);
       } finally {
         setIsProcessing(false);
+        setTimeout(() => scrollToBottom(true), 100);
       }
     },
-    [inputText, isProcessing, language]
+    [inputText, isProcessing, language, scrollToBottom]
   );
 
   // Initialize conversation greeting on language change or first load
   useEffect(() => {
     const greeting = aiService.getInitialGreeting(language);
     setMessages([greeting]);
+    setTimeout(() => scrollToBottom(false), 80);
 
     const initialQ = route.params?.initialQuery;
     if (initialQ && !initialQueryExecuted.current) {
@@ -108,10 +148,17 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          paddingTop: insets.top,
+        },
+      ]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <Header
         title="AI Rental Assistant"
         subtitle="Data-driven car recommendations"
@@ -153,8 +200,11 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
         ref={flatListRef}
         data={messages}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 16 }]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        onContentSizeChange={() => scrollToBottom(true)}
+        onLayout={() => scrollToBottom(false)}
         renderItem={({ item }) => {
           if (item.sender === 'user') {
             return <ChatBubble message={item} />;
@@ -190,6 +240,7 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
         language={language}
         onSelectLanguage={setLanguage}
         isProcessing={isProcessing}
+        bottomInset={isKeyboardVisible ? 6 : Math.max(insets.bottom, 12)}
       />
 
       {/* Voice Simulation Modal */}
