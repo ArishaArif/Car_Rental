@@ -1,5 +1,8 @@
 import {
   CapturedPhoto,
+  DamageFinding,
+  DamageSeverity,
+  DamageType,
   InspectionAnalysisResult,
   PhotoCategory,
 } from '../types';
@@ -82,25 +85,59 @@ class DamageDetectionService implements DamageDetectionServiceInterface {
 
       if (res.success && res.data) {
         const live = res.data;
-        return {
-          inspectionId: `insp-ai-${Date.now().toString().slice(-6)}`,
-          vehicleId: live.vehicle_id,
-          bookingId,
-          analyzedAt: new Date().toISOString(),
-          overallSeverity: live.overall_severity,
-          estimatedRepairCost: live.estimated_repair_cost,
-          totalDamagesDetected: live.total_damages_detected,
-          aiSummary: live.ai_summary,
-          disclaimer: 'Velox Vision Neural Inspection Engine verified.',
-          findings: live.findings.map((f, idx) => ({
+        const findings: DamageFinding[] = (live.findings || []).map((f: any, idx: number) => {
+          let cat: PhotoCategory = 'Front';
+          const angleLower = (f.angle || '').toLowerCase();
+          if (angleLower.includes('rear') || angleLower.includes('back')) cat = 'Rear';
+          else if (angleLower.includes('left')) cat = 'Left';
+          else if (angleLower.includes('right')) cat = 'Right';
+          else if (angleLower.includes('interior')) cat = 'Interior';
+          else if (angleLower.includes('dash')) cat = 'Dashboard';
+
+          let dtype: DamageType = 'Scratch';
+          const dtLower = (f.damage_type || '').toLowerCase();
+          if (dtLower.includes('no damage') || dtLower.includes('clean') || dtLower.includes('none')) dtype = 'No Damage';
+          else if (dtLower.includes('dent')) dtype = 'Dent';
+          else if (dtLower.includes('crack') || dtLower.includes('glass')) dtype = 'Glass Crack';
+
+          let sev: DamageSeverity = 'Minor';
+          const sevLower = (f.severity || '').toLowerCase();
+          if (sevLower.includes('none') || sevLower.includes('clean')) sev = 'None';
+          else if (sevLower.includes('moderate')) sev = 'Moderate';
+          else if (sevLower.includes('severe')) sev = 'Severe';
+
+          return {
             id: `find-live-${idx + 1}`,
-            category: (f.angle.charAt(0).toUpperCase() + f.angle.slice(1)) as PhotoCategory,
-            damageType: f.damage_type,
-            severity: f.severity as any,
-            locationOnPanel: f.location_on_panel,
-            repairEstimate: f.repair_estimate,
-            confidence: f.confidence,
-          })),
+            category: cat,
+            damageType: dtype,
+            severity: sev,
+            location: f.location_on_panel || f.location || `${cat} Panel`,
+            confidence: typeof f.confidence === 'number' ? f.confidence : 0.92,
+            estimatedRepairCost: Number(f.repair_estimate || f.estimatedRepairCost || 0),
+            evidenceImageUrl: photoMap[cat.toLowerCase()] || 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800',
+            notes: f.notes || `${dtype} detected on ${cat} section.`,
+          };
+        });
+
+        let cond: 'Passed - No Damage' | 'Needs Minor Repair' | 'Requires Provider Attention' = 'Passed - No Damage';
+        const allowedConds = ['Passed - No Damage', 'Needs Minor Repair', 'Requires Provider Attention'];
+        if (allowedConds.includes(live.overall_condition)) {
+          cond = live.overall_condition as any;
+        } else if (live.total_estimated_cost > 10000) {
+          cond = 'Requires Provider Attention';
+        } else if (live.total_estimated_cost > 0 || findings.some(f => f.damageType !== 'No Damage')) {
+          cond = 'Needs Minor Repair';
+        }
+
+        return {
+          inspectionId: live.inspection_id || `insp-ai-${Date.now().toString().slice(-6)}`,
+          vehicleId: live.vehicle_id || vehicleId,
+          bookingId,
+          analyzedAt: live.analyzed_at || new Date().toISOString(),
+          findings,
+          totalEstimatedCost: Number(live.total_estimated_cost || 0),
+          overallCondition: cond,
+          disclaimer: live.disclaimer || 'Velox Vision Neural Inspection Engine verified.',
         };
       }
     } catch (e: any) {

@@ -4,7 +4,7 @@
  */
 
 export * from './types';
-export { apiClient, ApiError, ApiResponse } from '../services/apiClient';
+export { apiClient, ApiError, type ApiResponse } from '../services/apiClient';
 export { authApi } from './authApi';
 export { vehiclesApi } from './vehiclesApi';
 export { bookingsApi } from './bookingsApi';

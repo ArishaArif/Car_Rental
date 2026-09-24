@@ -171,7 +171,7 @@ class SmartPricingService implements SmartPricingServiceInterface {
     try {
       await aiPricingApi.applyRecommendation({
         vehicle_id: vehicleId,
-        recommended_price: newPrice,
+        new_price: newPrice,
       });
     } catch (e: any) {
       console.warn('[SmartPricingService] live applyRecommendation fallback:', e?.message);

@@ -196,6 +196,7 @@ class VehicleService {
         seats: newVehicle.seats,
         doors: newVehicle.doors,
         transmission: newVehicle.transmission as any,
+        fuel: newVehicle.fuel as any,
         fuel_type: newVehicle.fuel as any,
         location: newVehicle.location,
         features: newVehicle.features,

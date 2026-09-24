@@ -99,6 +99,7 @@ export interface ApiVehicleCreate {
   doors?: number;
   transmission?: 'Automatic' | 'Manual';
   fuel?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric';
+  fuel_type?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric';
   location: string;
   features?: string[];
   description?: string;
@@ -303,7 +304,7 @@ export interface ApiInspectionCreate {
   inspector_name?: string;
   date: string;
   status?: 'Pending' | 'In Progress' | 'Completed' | 'Failed';
-  type?: 'Routine' | 'Pre-Trip' | 'Post-Return';
+  type?: 'Routine' | 'Pre-Trip' | 'Post-Return' | 'Maintenance Check';
   exterior_condition?: string;
   interior_condition?: string;
   tires_and_brakes?: string;
@@ -503,13 +504,13 @@ export interface ApiVerificationItemResponse {
   documentType: string;
   documentNumber: string;
   submittedAt: string;
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
   notes?: string;
   documentUrl?: string;
 }
 
 export interface ApiVerificationReviewRequest {
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
   notes?: string;
 }
 
@@ -579,6 +580,7 @@ export interface ApiVehiclePricingMetricsResponse {
 export interface ApiApplyRecommendationRequest {
   vehicle_id: string;
   new_price: number;
+  recommended_price?: number;
 }
 
 export interface ApiPhotoTemplateItem {

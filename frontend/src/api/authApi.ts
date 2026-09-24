@@ -85,7 +85,7 @@ export const authApi = {
     email: string;
     otp: string;
     purpose?: string;
-  }): Promise<ApiResponse<ApiTokenResponse>> {
+  }): Promise<ApiResponse<{ message: string }>> {
     const cleanEmail = (payload.email || '').trim().toLowerCase();
     const cleanOtp = (payload.otp || '').trim();
 
