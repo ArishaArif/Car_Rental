@@ -40,7 +40,11 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
             # Resend OTP to unverified user
             otp_code = await create_otp(db, str(existing.id), OTPPurpose.EMAIL_VERIFICATION)
             await send_otp_email(existing.email, existing.full_name, otp_code, "email_verification")
-            return {"message": "Account exists but email not verified. A new OTP has been sent.", "email": data.email}
+            return {
+                "message": "Account exists but email not verified. A new OTP has been sent.",
+                "email": data.email,
+                "otp_code": otp_code,
+            }
 
     # Create user
     user = User(
@@ -62,6 +66,7 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
     return {
         "message": "Registration successful. Please check your email for the verification code.",
         "email": data.email,
+        "otp_code": otp_code,
     }
 
 
@@ -103,7 +108,10 @@ async def resend_otp_code(db: AsyncSession, email: str, purpose: str) -> dict:
     otp_code = await create_otp(db, str(user.id), otp_purpose)
     await send_otp_email(user.email, user.full_name, otp_code, purpose)
 
-    return {"message": "If an account with this email exists, a new OTP has been sent."}
+    return {
+        "message": "If an account with this email exists, a new OTP has been sent.",
+        "otp_code": otp_code,
+    }
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────

@@ -109,24 +109,30 @@ async def send_otp_email(
     Returns:
         True on success, False on failure
     """
+    print(f"[EmailService] >>> OTP Code for {recipient_email} ({purpose}): {otp_code} <<<")
     subjects = {
         "email_verification": "🔐 Verify Your Email — Car Rental",
         "password_reset": "🔑 Reset Your Password — Car Rental",
     }
 
     try:
-        params = resend.Emails.SendParams(
-            from_=settings.RESEND_FROM_EMAIL,
-            to=[recipient_email],
-            subject=subjects.get(purpose, "Your OTP Code — Car Rental"),
-            html=_build_otp_email_html(
+        from_email = settings.RESEND_FROM_EMAIL
+        if not from_email or "yourdomain.com" in from_email:
+            from_email = "Car Rental <onboarding@resend.dev>"
+
+        params = {
+            "from": from_email,
+            "to": [recipient_email],
+            "subject": subjects.get(purpose, "Your OTP Code — Car Rental"),
+            "html": _build_otp_email_html(
                 full_name=full_name,
                 otp_code=otp_code,
                 purpose=purpose,
                 expire_minutes=settings.OTP_EXPIRE_MINUTES,
             ),
-        )
+        }
         resend.Emails.send(params)
+        print(f"[EmailService] Resend email successfully delivered to {recipient_email}")
         return True
     except Exception as e:
         # In production, log this properly
