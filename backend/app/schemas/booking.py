@@ -24,7 +24,7 @@ class BookingCustomerDetailsSchema(BaseModel):
     full_name: str = Field(..., alias="fullName")
     phone: str
     email: EmailStr
-    license_number: str = Field(..., alias="licenseNumber")
+    license_number: Optional[str] = Field(None, alias="licenseNumber")
     notes: Optional[str] = None
 
     model_config = {"populate_by_name": True}

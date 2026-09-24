@@ -15,6 +15,7 @@ export const API_URLS: Record<ApiEnvironment, string> = {
 
 export const API_CONFIG = {
   baseURL: API_URLS[ACTIVE_ENV],
+  timeout: 15000,
   timeoutMs: 15000,
   apiVersion: '1.0.0',
 };

@@ -5,8 +5,6 @@
 
 import { apiClient, ApiResponse } from '../services/apiClient';
 import {
-  ApiForgotPasswordRequest,
-  ApiLoginRequest,
   ApiRegisterRequest,
   ApiResendOtpRequest,
   ApiResetPasswordRequest,
@@ -85,7 +83,7 @@ export const authApi = {
     email: string;
     otp: string;
     purpose?: string;
-  }): Promise<ApiResponse<ApiTokenResponse>> {
+  }): Promise<ApiResponse<{ message: string }>> {
     const cleanEmail = (payload.email || '').trim().toLowerCase();
     const cleanOtp = (payload.otp || '').trim();
 
@@ -99,7 +97,7 @@ export const authApi = {
       purpose: payload.purpose || 'email_verification',
     };
 
-    return apiClient.post<ApiTokenResponse>('/auth/verify-otp', backendPayload);
+    return apiClient.post<{ message: string }>('/auth/verify-otp', backendPayload);
   },
 
   /**
@@ -133,7 +131,7 @@ export const authApi = {
   async resetPassword(payload: {
     email: string;
     otp: string;
-    newPassword?: string;
+    newPassword: string;
   }): Promise<ApiResponse<{ message: string }>> {
     const cleanEmail = (payload.email || '').trim().toLowerCase();
     const cleanOtp = (payload.otp || '').trim();

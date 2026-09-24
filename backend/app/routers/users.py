@@ -43,14 +43,11 @@ async def update_me(
 ):
     updates = data.model_dump(exclude_none=True)
     if updates:
-        # If preferences are being updated, merge or set
+        # If preferences are being updated, merge with existing
         if "preferences" in updates and current_user.preferences:
             merged_prefs = dict(current_user.preferences)
             merged_prefs.update(updates["preferences"])
             updates["preferences"] = merged_prefs
-
-        for key, val in updates.items():
-            setattr(current_user, key, val)
 
         await db.execute(
             update(User).where(User.id == current_user.id).values(**updates)

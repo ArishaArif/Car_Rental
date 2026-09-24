@@ -55,13 +55,13 @@ export interface ApiResetPasswordRequest {
 export interface ApiUserResponse {
   id: string;
   email: string;
-  name: string;
+  full_name: string;
   role: 'Customer' | 'Provider' | 'FleetManager' | 'Admin';
-  phone?: string;
+  phone_number?: string;
   is_active: boolean;
-  is_verified: boolean;
+  is_email_verified: boolean;
   city?: string;
-  avatar_url?: string;
+  profile_picture?: string;
   license_number?: string;
   license_expiry?: string;
   business_name?: string;
@@ -90,21 +90,19 @@ export interface ApiVehicleCreate {
   brand: string;
   model: string;
   year: number;
-  category: 'Economy' | 'Sedan' | 'SUV' | 'Luxury';
+  category: 'Economy' | 'Sedan' | 'SUV' | 'Luxury' | 'Sports' | 'Electric' | 'Compact';
   image: string;
   price_per_day: number;
   weekly_price?: number;
   security_deposit?: number;
   seats?: number;
   doors?: number;
-  luggage?: number;
   transmission?: 'Automatic' | 'Manual';
+  fuel?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric';
   fuel_type?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric';
   location: string;
   features?: string[];
-  specs?: Record<string, any>;
-  license_plate?: string;
-  color?: string;
+  description?: string;
   mileage?: number;
   is_published?: boolean;
 }
@@ -171,24 +169,22 @@ export interface ApiCustomerDetails {
 
 export interface ApiBookingCreate {
   vehicle_id: string;
-  start_date: string;
-  end_date: string;
+  pickup_date: string;
+  return_date: string;
   pickup_time?: string;
-  dropoff_time?: string;
+  return_time?: string;
+  rental_days: number;
   pickup_location: string;
-  dropoff_location: string;
-  trip_type?: 'City' | 'Outstation' | 'Chauffeur' | 'Self-Drive';
-  protection_plan?: 'Basic' | 'Premium' | 'Full';
-  add_ons?: string[];
+  return_location: string;
+  payment_method?: string;
   customer_details: ApiCustomerDetails;
 }
 
 export interface ApiPricingCalculationRequest {
   vehicle_id: string;
-  start_date: string;
-  end_date: string;
-  protection_plan?: 'Basic' | 'Premium' | 'Full';
-  add_ons?: string[];
+  rental_days: number;
+  pickup_date?: string;
+  return_date?: string;
 }
 
 export interface ApiPricingCalculationResponse {
@@ -308,7 +304,7 @@ export interface ApiInspectionCreate {
   inspector_name?: string;
   date: string;
   status?: 'Pending' | 'In Progress' | 'Completed' | 'Failed';
-  type?: 'Routine' | 'Pre-Trip' | 'Post-Return';
+  type?: 'Routine' | 'Pre-Trip' | 'Post-Return' | 'Maintenance Check';
   exterior_condition?: string;
   interior_condition?: string;
   tires_and_brakes?: string;
@@ -508,13 +504,13 @@ export interface ApiVerificationItemResponse {
   documentType: string;
   documentNumber: string;
   submittedAt: string;
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
   notes?: string;
   documentUrl?: string;
 }
 
 export interface ApiVerificationReviewRequest {
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: 'Pending' | 'Verified' | 'Rejected' | 'Suspended';
   notes?: string;
 }
 
@@ -583,15 +579,14 @@ export interface ApiVehiclePricingMetricsResponse {
 
 export interface ApiApplyRecommendationRequest {
   vehicle_id: string;
-  recommended_price: number;
+  new_price: number;
+  recommended_price?: number;
 }
 
 export interface ApiPhotoTemplateItem {
-  angle: string;
   title: string;
-  instruction: string;
-  guide_box_label: string;
-  sample_url?: string;
+  hint: string;
+  mock_uri?: string;
 }
 
 export interface ApiDamageAnalysisRequest {
@@ -601,28 +596,33 @@ export interface ApiDamageAnalysisRequest {
 }
 
 export interface ApiInspectionAnalysisResponse {
+  inspection_id: string;
   vehicle_id: string;
-  total_damages_detected: number;
-  overall_severity: 'None' | 'Minor' | 'Moderate' | 'Severe';
-  estimated_repair_cost: number;
-  confidence_score: number;
+  booking_id?: string;
+  analyzed_at: string;
   findings: Array<{
-    angle: string;
+    id: string;
+    category: string;
     damage_type: string;
     severity: string;
-    location_on_panel: string;
-    repair_estimate: number;
+    location: string;
     confidence: number;
+    estimated_repair_cost: number;
+    evidence_image_url?: string;
+    notes?: string;
   }>;
-  ai_summary: string;
+  total_estimated_cost: number;
+  overall_condition: string;
+  disclaimer: string;
 }
 
 export interface ApiAIRecommendationRequest {
   seats?: number;
-  category?: string;
+  body_type?: string;
   max_price?: number;
   fuel_type?: string;
   city?: string;
+  top_n?: number;
 }
 
 // ==================== NOTIFICATIONS ====================

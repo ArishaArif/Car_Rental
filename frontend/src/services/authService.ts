@@ -209,7 +209,7 @@ class AuthService {
       for (const roleKey of Object.keys(DEMO_USERS) as UserRole[]) {
         const demo = DEMO_USERS[roleKey];
         if (demo.email.toLowerCase() === cleanEmail) {
-          if (cleanPass === demo.pass || cleanPass === 'password123' || cleanPass === 'Admin@123456') {
+          if (cleanPass === demo.pass) {
             const role = expectedRole || demo.user.role;
             const fallbackUser: AuthUser = {
               ...demo.user,
@@ -236,7 +236,7 @@ class AuthService {
     const cleanEmail = payload.email.trim().toLowerCase();
 
     try {
-      const res = await apiClient.post<any>('/auth/register', {
+      await apiClient.post<any>('/auth/register', {
         full_name: payload.name.trim(),
         email: cleanEmail,
         password: payload.password,
@@ -298,7 +298,7 @@ class AuthService {
         success: true,
         message: res.data?.message || `A fresh verification code has been sent to ${cleanEmail}`,
       };
-    } catch (apiError: any) {
+    } catch {
       return {
         success: true,
         message: `A fresh verification code has been sent to ${cleanEmail}`,
@@ -403,7 +403,7 @@ class AuthService {
       if (rToken) {
         await apiClient.post('/auth/logout', { refresh_token: rToken });
       }
-    } catch (e) {
+    } catch {
       // Ignore network errors on logout
     } finally {
       apiClient.setAuthToken(null);

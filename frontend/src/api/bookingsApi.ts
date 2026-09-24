@@ -46,8 +46,8 @@ export const bookingsApi = {
     if (!payload.vehicle_id) {
       throw new Error('Vehicle ID is required for pricing calculation');
     }
-    if (!payload.start_date || !payload.end_date) {
-      throw new Error('Start date and end date are required');
+    if (!payload.rental_days || payload.rental_days < 1) {
+      throw new Error('Rental days must be at least 1');
     }
     return apiClient.post<ApiPricingCalculationResponse>('/bookings/calculate-pricing', payload);
   },
@@ -59,7 +59,7 @@ export const bookingsApi = {
     if (!payload.vehicle_id) {
       throw new Error('Please select a vehicle to rent');
     }
-    if (!payload.start_date || !payload.end_date) {
+    if (!payload.pickup_date || !payload.return_date) {
       throw new Error('Please provide rental dates');
     }
     if (!payload.customer_details?.fullName || !payload.customer_details?.phone) {
@@ -95,12 +95,15 @@ export const bookingsApi = {
    */
   async pickupBooking(
     id: string,
-    details?: { odometer?: number; fuel_level?: number; notes?: string }
+    details: { pickup_code: string; pickup_mileage?: number }
   ): Promise<ApiResponse<ApiBookingResponse>> {
     if (!id) {
       throw new Error('Booking ID is required');
     }
-    return apiClient.post<ApiBookingResponse>(`/bookings/${id}/pickup`, details || {});
+    if (!details.pickup_code) {
+      throw new Error('Pickup code is required');
+    }
+    return apiClient.post<ApiBookingResponse>(`/bookings/${id}/pickup`, details);
   },
 
   /**
@@ -109,10 +112,11 @@ export const bookingsApi = {
   async returnBooking(
     id: string,
     details: {
-      end_odometer: number;
-      end_fuel_level: number;
-      condition_notes?: string;
-      additional_charges?: number;
+      dropoff_mileage?: number;
+      dropoff_fuel?: number;
+      late_hours?: number;
+      damage_charges?: number;
+      notes?: string;
     }
   ): Promise<ApiResponse<ApiBookingResponse>> {
     if (!id) {

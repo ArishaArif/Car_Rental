@@ -45,7 +45,7 @@ export const aiPricingApi = {
   async applyRecommendation(
     payload: ApiApplyRecommendationRequest
   ): Promise<ApiResponse<ApiVehicleResponse>> {
-    if (!payload.vehicle_id || !payload.recommended_price) {
+    if (!payload.vehicle_id || !payload.new_price) {
       throw new Error('Vehicle ID and recommended price are required');
     }
     return apiClient.post<ApiVehicleResponse>('/pricing/apply-recommendation', payload);

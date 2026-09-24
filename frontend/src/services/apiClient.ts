@@ -16,6 +16,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   params?: Record<string, any>;
   timeout?: number;
+  timeoutMs?: number;
   signal?: AbortSignal;
 }
 
@@ -44,7 +45,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = API_CONFIG.baseURL;
-    this.defaultTimeout = API_CONFIG.timeout || 15000;
+    this.defaultTimeout = API_CONFIG.timeoutMs ?? (API_CONFIG as any).timeout ?? 15000;
   }
 
   public setAuthToken(token: string | null) {
@@ -129,7 +130,7 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = this.buildUrl(endpoint, options.params);
     const headers = this.buildHeaders(options.headers);
-    const timeoutMs = options.timeout || this.defaultTimeout;
+    const timeoutMs = options.timeoutMs ?? options.timeout ?? this.defaultTimeout;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

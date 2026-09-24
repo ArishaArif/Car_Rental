@@ -19,7 +19,7 @@ export interface VehicleFilterParams {
   max_price?: number;
   transmission?: string;
   fuel_type?: string;
-  include_unapproved?: boolean;
+  include_archived?: boolean;
 }
 
 export const vehiclesApi = {
@@ -50,7 +50,11 @@ export const vehiclesApi = {
     if (!payload.price_per_day || payload.price_per_day <= 0) {
       throw new Error('Please enter a valid positive daily rate');
     }
-    return apiClient.post<ApiVehicleResponse>('/vehicles', payload);
+    const backendPayload = {
+      ...payload,
+      fuel: payload.fuel || payload.fuel_type || 'Petrol',
+    };
+    return apiClient.post<ApiVehicleResponse>('/vehicles', backendPayload);
   },
 
   /**
@@ -60,7 +64,7 @@ export const vehiclesApi = {
     if (!id) {
       throw new Error('Vehicle ID is required');
     }
-    return apiClient.put<ApiVehicleResponse>(`/vehicles/${id}`, payload);
+    return apiClient.patch<ApiVehicleResponse>(`/vehicles/${id}`, payload);
   },
 
   /**

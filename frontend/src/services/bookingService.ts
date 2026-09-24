@@ -297,7 +297,7 @@ class BookingService {
         }
         return liveB;
       }
-    } catch (e) {
+    } catch {
       // Fallback to local
     }
     return this.bookings.find(b => b.id === id);
@@ -456,7 +456,7 @@ class BookingService {
           paymentStatus: inv.payment_status,
         };
       }
-    } catch (e) {
+    } catch {
       // Fallback
     }
 

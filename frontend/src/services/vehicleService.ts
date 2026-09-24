@@ -71,7 +71,7 @@ class VehicleService {
 
   public async syncFromBackend(): Promise<Vehicle[]> {
     try {
-      const res = await vehiclesApi.getVehicles({ include_unapproved: true });
+      const res = await vehiclesApi.getVehicles({ include_archived: true });
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         const liveVehicles = res.data.map(mapApiVehicleToFrontend);
 
@@ -140,7 +140,7 @@ class VehicleService {
         this.notifyListeners();
         return mapped;
       }
-    } catch (err) {
+    } catch {
       // not found on backend or offline
     }
 
@@ -196,6 +196,7 @@ class VehicleService {
         seats: newVehicle.seats,
         doors: newVehicle.doors,
         transmission: newVehicle.transmission as any,
+        fuel: newVehicle.fuel as any,
         fuel_type: newVehicle.fuel as any,
         location: newVehicle.location,
         features: newVehicle.features,

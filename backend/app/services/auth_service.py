@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 
-from app.models.user import User, AuthProvider
+from app.models.user import User, AuthProvider, UserRole
 from app.models.token_blacklist import TokenBlacklist
 from app.models.otp import OTPPurpose
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, AccessTokenResponse

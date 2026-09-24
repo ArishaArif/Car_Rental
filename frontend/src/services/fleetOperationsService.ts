@@ -1,12 +1,14 @@
 import {
   DamageReport,
   DamageReviewStatus,
+  DamageStatus,
   FleetInspection,
   FleetReturn,
   FleetTask,
   InspectionStatus,
   MaintenanceRecord,
   MaintenanceStatus,
+  MaintenanceType,
   ReturnStatus,
 } from '../types';
 import { vehicleService } from './vehicleService';
@@ -21,15 +23,33 @@ import {
 type FleetChangeListener = () => void;
 
 function mapApiMaintenance(m: ApiMaintenanceResponse): MaintenanceRecord {
+  const allowedTypes: MaintenanceType[] = [
+    'Oil Change',
+    'Brake Inspection',
+    'Tire Rotation',
+    'Detailing & Cleaning',
+    'Scheduled Service',
+    'Battery & Electrical',
+    'General Repair',
+  ];
+  const type: MaintenanceType = allowedTypes.includes(m.type as MaintenanceType)
+    ? (m.type as MaintenanceType)
+    : 'Scheduled Service';
+
+  const allowedStatuses: MaintenanceStatus[] = ['Scheduled', 'In Progress', 'Completed', 'Overdue'];
+  const status: MaintenanceStatus = allowedStatuses.includes(m.status as MaintenanceStatus)
+    ? (m.status as MaintenanceStatus)
+    : 'Scheduled';
+
   return {
     id: m.id,
     vehicleId: m.vehicle_id,
     vehicleName: m.vehicle_name,
     vehiclePlate: m.vehicle_plate || 'FLT-001',
-    type: m.type,
+    type,
     dueDate: m.due_date,
     completedDate: m.completed_date,
-    status: (m.status as MaintenanceStatus) || 'Scheduled',
+    status,
     estimatedCost: m.estimated_cost,
     actualCost: m.actual_cost,
     serviceCenter: m.service_center,
@@ -38,6 +58,31 @@ function mapApiMaintenance(m: ApiMaintenanceResponse): MaintenanceRecord {
 }
 
 function mapApiInspection(i: ApiInspectionResponse): FleetInspection {
+  const allowedTypes: Array<FleetInspection['type']> = ['Pre-Trip', 'Post-Return', 'Routine', 'Maintenance Check'];
+  const type: FleetInspection['type'] = allowedTypes.includes(i.type as any)
+    ? (i.type as any)
+    : 'Routine';
+
+  const allowedExterior: Array<FleetInspection['exteriorCondition']> = ['Good', 'Minor Scratches', 'Damaged'];
+  const exteriorCondition: FleetInspection['exteriorCondition'] = allowedExterior.includes(i.exterior_condition as any)
+    ? (i.exterior_condition as any)
+    : 'Good';
+
+  const allowedInterior: Array<FleetInspection['interiorCondition']> = ['Clean', 'Normal', 'Needs Cleaning'];
+  const interiorCondition: FleetInspection['interiorCondition'] = allowedInterior.includes(i.interior_condition as any)
+    ? (i.interior_condition as any)
+    : 'Clean';
+
+  const allowedTires: Array<FleetInspection['tiresAndBrakes']> = ['Good', 'Fair', 'Needs Replacement'];
+  const tiresAndBrakes: FleetInspection['tiresAndBrakes'] = allowedTires.includes(i.tires_and_brakes as any)
+    ? (i.tires_and_brakes as any)
+    : 'Good';
+
+  const allowedStatuses: InspectionStatus[] = ['Pending', 'In Progress', 'Completed', 'Failed'];
+  const status: InspectionStatus = allowedStatuses.includes(i.status as any)
+    ? (i.status as any)
+    : 'Completed';
+
   return {
     id: i.id,
     vehicleId: i.vehicle_id,
@@ -45,45 +90,83 @@ function mapApiInspection(i: ApiInspectionResponse): FleetInspection {
     bookingId: i.booking_id,
     inspectorName: i.inspector_name,
     date: i.date,
-    status: (i.status as InspectionStatus) || 'Completed',
-    type: (i.type as any) || 'Routine',
-    exteriorCondition: i.exterior_condition,
-    interiorCondition: i.interior_condition,
-    tiresAndBrakes: i.tires_and_brakes,
-    fuelLevel: i.fuel_level,
-    odometerReading: i.odometer_reading,
-    passed: i.passed,
+    status,
+    type,
+    exteriorCondition,
+    interiorCondition,
+    tiresAndBrakes,
+    fuelLevel: typeof i.fuel_level === 'number' ? i.fuel_level : 100,
+    odometerReading: typeof i.odometer_reading === 'number' ? i.odometer_reading : 0,
+    passed: typeof i.passed === 'boolean' ? i.passed : true,
     notes: i.notes,
   };
 }
 
 function mapApiDamage(d: ApiDamageReportResponse): DamageReport {
+  const allowedDamageStatus: DamageStatus[] = [
+    'Minor Scratches',
+    'Dented Panel',
+    'Cracked Glass',
+    'Interior Damage',
+    'Wheel Rim Scuff',
+    'Mechanical / Engine',
+  ];
+  const damageStatus: DamageStatus = allowedDamageStatus.includes(d.damage_status as any)
+    ? (d.damage_status as DamageStatus)
+    : 'Minor Scratches';
+
+  const allowedReviewStatus: DamageReviewStatus[] = ['Pending Review', 'Approved', 'Disputed', 'Resolved'];
+  const reviewStatus: DamageReviewStatus = allowedReviewStatus.includes(d.review_status as any)
+    ? (d.review_status as DamageReviewStatus)
+    : 'Pending Review';
+
   return {
     id: d.id,
     vehicleId: d.vehicle_id,
     vehicleName: d.vehicle_name,
-    bookingId: d.booking_id,
+    bookingId: d.booking_id || '',
     customerName: d.customer_name,
     reportedAt: d.reported_at,
-    damageStatus: d.damage_status,
+    damageStatus,
     description: d.description,
     estimatedCharge: d.estimated_charge,
-    reviewStatus: (d.review_status as DamageReviewStatus) || 'Pending Review',
+    reviewStatus,
     resolvedAt: d.resolved_at,
   };
 }
 
 function mapApiTask(t: ApiFleetTaskResponse): FleetTask {
+  const allowedPriorities: Array<FleetTask['priority']> = ['High', 'Medium', 'Low'];
+  const priority: FleetTask['priority'] = allowedPriorities.includes(t.priority as any)
+    ? (t.priority as any)
+    : 'Medium';
+
+  const allowedStatuses: Array<FleetTask['status']> = ['Pending', 'Completed'];
+  const status: FleetTask['status'] = allowedStatuses.includes(t.status as any)
+    ? (t.status as any)
+    : 'Pending';
+
+  const allowedCategories: Array<FleetTask['category']> = [
+    'Preparation',
+    'Cleaning',
+    'Shuttle',
+    'Inspection',
+    'Maintenance',
+  ];
+  const category: FleetTask['category'] = allowedCategories.includes(t.category as any)
+    ? (t.category as any)
+    : 'Preparation';
+
   return {
     id: t.id,
     title: t.title,
     description: t.description,
     vehicleId: t.vehicle_id,
     vehicleName: t.vehicle_name,
-    priority: (t.priority as any) || 'Medium',
+    priority,
     dueTime: t.due_time,
-    status: (t.status as any) || 'Pending',
-    category: (t.category as any) || 'Preparation',
+    status,
+    category,
   };
 }
 
