@@ -1,5 +1,7 @@
 import { FilterOptions, SortOption, Vehicle, VehicleAvailability, VehicleCategory } from '../types';
 import { MOCK_VEHICLES } from './vehicleData';
+import { vehiclesApi } from '../api/vehiclesApi';
+import { ApiVehicleResponse } from '../api/types';
 
 export interface CategorySummary {
   category: VehicleCategory;
@@ -21,6 +23,32 @@ export interface FleetStatsSummary {
 
 type VehicleChangeListener = (vehicles: Vehicle[]) => void;
 
+function mapApiVehicleToFrontend(apiV: ApiVehicleResponse): Vehicle {
+  return {
+    id: String(apiV.id),
+    brand: apiV.brand,
+    model: apiV.model,
+    year: apiV.year,
+    category: (apiV.category as VehicleCategory) || 'Sedan',
+    image: apiV.image,
+    images: apiV.images && apiV.images.length > 0 ? apiV.images : [apiV.image],
+    pricePerDay: apiV.price_per_day,
+    weeklyPrice: apiV.weekly_price || Math.round(apiV.price_per_day * 6.2),
+    securityDeposit: apiV.security_deposit || 200,
+    rating: apiV.rating || 5.0,
+    seats: apiV.seats || 5,
+    doors: apiV.doors || 4,
+    transmission: (apiV.transmission as any) || 'Automatic',
+    fuel: (apiV.fuel_type as any) || 'Petrol',
+    location: apiV.location || 'Central Depot & Hub West',
+    mileage: apiV.mileage || 15000,
+    availability: (apiV.availability as VehicleAvailability) || 'Available',
+    features: apiV.features || ['Bluetooth Audio', 'Air Conditioning', 'Keyless Entry'],
+    description: (apiV.specs as any)?.description || `${apiV.brand} ${apiV.model} maintained to official certified standards.`,
+    isPublished: apiV.is_published !== undefined ? apiV.is_published : true,
+  };
+}
+
 class VehicleService {
   // In-memory unified fleet store initialized from MOCK_VEHICLES
   private vehicles: Vehicle[] = MOCK_VEHICLES.map(v => ({
@@ -32,6 +60,34 @@ class VehicleService {
   }));
 
   private listeners: VehicleChangeListener[] = [];
+  private hasSyncedWithBackend: boolean = false;
+
+  constructor() {
+    // Proactively fetch live vehicles from backend in background
+    this.syncFromBackend().catch(err => {
+      console.warn('[VehicleService] Initial backend sync background warning:', err?.message);
+    });
+  }
+
+  public async syncFromBackend(): Promise<Vehicle[]> {
+    try {
+      const res = await vehiclesApi.getVehicles({ include_unapproved: true });
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const liveVehicles = res.data.map(mapApiVehicleToFrontend);
+
+        // Merge live vehicles with mock dataset without duplicates
+        const liveIds = new Set(liveVehicles.map(v => v.id));
+        const keptMocks = this.vehicles.filter(v => !liveIds.has(v.id));
+        this.vehicles = [...liveVehicles, ...keptMocks];
+        this.hasSyncedWithBackend = true;
+        this.notifyListeners();
+        return [...this.vehicles];
+      }
+    } catch (err: any) {
+      console.warn('[VehicleService] Live vehicles fetch warning (using cache):', err?.message);
+    }
+    return [...this.vehicles];
+  }
 
   /**
    * Subscribe to vehicle dataset updates
@@ -59,6 +115,10 @@ class VehicleService {
    * If includeArchived is false (default for customer app), only published, non-archived vehicles are returned.
    */
   public async getAllVehicles(includeArchived: boolean = false): Promise<Vehicle[]> {
+    if (!this.hasSyncedWithBackend) {
+      await this.syncFromBackend();
+    }
+
     if (includeArchived) {
       return [...this.vehicles];
     }
@@ -69,16 +129,31 @@ class VehicleService {
    * Find vehicle by ID
    */
   public async getVehicleById(id: string): Promise<Vehicle | undefined> {
-    return this.vehicles.find(v => v.id === id);
+    const local = this.vehicles.find(v => v.id === id);
+    if (local) return local;
+
+    try {
+      const res = await vehiclesApi.getVehicleById(id);
+      if (res.success && res.data) {
+        const mapped = mapApiVehicleToFrontend(res.data);
+        this.vehicles.unshift(mapped);
+        this.notifyListeners();
+        return mapped;
+      }
+    } catch (err) {
+      // not found on backend or offline
+    }
+
+    return undefined;
   }
 
   /**
    * Add a new vehicle to fleet
    */
   public async addVehicle(data: Omit<Vehicle, 'id'> | Partial<Vehicle>): Promise<Vehicle> {
-    const id = `veh-${Date.now().toString().slice(-6)}`;
+    const localId = `veh-${Date.now().toString().slice(-6)}`;
     const newVehicle: Vehicle = {
-      id,
+      id: localId,
       brand: data.brand || 'Toyota',
       model: data.model || 'Corolla',
       year: data.year || new Date().getFullYear(),
@@ -108,6 +183,36 @@ class VehicleService {
       isPublished: data.isPublished !== undefined ? data.isPublished : true,
     };
 
+    try {
+      const apiRes = await vehiclesApi.createVehicle({
+        brand: newVehicle.brand,
+        model: newVehicle.model,
+        year: newVehicle.year,
+        category: newVehicle.category,
+        image: newVehicle.image,
+        price_per_day: newVehicle.pricePerDay,
+        weekly_price: newVehicle.weeklyPrice,
+        security_deposit: newVehicle.securityDeposit,
+        seats: newVehicle.seats,
+        doors: newVehicle.doors,
+        transmission: newVehicle.transmission as any,
+        fuel_type: newVehicle.fuel as any,
+        location: newVehicle.location,
+        features: newVehicle.features,
+        mileage: newVehicle.mileage,
+        is_published: newVehicle.isPublished,
+      });
+
+      if (apiRes.success && apiRes.data) {
+        const live = mapApiVehicleToFrontend(apiRes.data);
+        this.vehicles = [live, ...this.vehicles];
+        this.notifyListeners();
+        return live;
+      }
+    } catch (err: any) {
+      console.warn('[VehicleService] Live vehicle creation fallback to local:', err?.message);
+    }
+
     this.vehicles = [newVehicle, ...this.vehicles];
     this.notifyListeners();
     return newVehicle;
@@ -120,6 +225,21 @@ class VehicleService {
     const idx = this.vehicles.findIndex(v => v.id === id);
     if (idx === -1) {
       throw new Error(`Vehicle ${id} not found`);
+    }
+
+    try {
+      const apiPayload: any = {};
+      if (updates.pricePerDay !== undefined) apiPayload.price_per_day = updates.pricePerDay;
+      if (updates.weeklyPrice !== undefined) apiPayload.weekly_price = updates.weeklyPrice;
+      if (updates.availability !== undefined) apiPayload.availability = updates.availability;
+      if (updates.isPublished !== undefined) apiPayload.is_published = updates.isPublished;
+      if (updates.location !== undefined) apiPayload.location = updates.location;
+
+      if (Object.keys(apiPayload).length > 0) {
+        await vehiclesApi.updateVehicle(id, apiPayload);
+      }
+    } catch (err: any) {
+      console.warn('[VehicleService] Live vehicle update fallback:', err?.message);
     }
 
     this.vehicles[idx] = {
@@ -137,6 +257,12 @@ class VehicleService {
   public async publishVehicle(id: string): Promise<Vehicle> {
     const idx = this.vehicles.findIndex(v => v.id === id);
     if (idx === -1) throw new Error(`Vehicle ${id} not found`);
+
+    try {
+      await vehiclesApi.publishVehicle(id);
+    } catch (err: any) {
+      console.warn('[VehicleService] Live publish fallback:', err?.message);
+    }
 
     const current = this.vehicles[idx];
     const newAvail = current.availability === 'Archived' ? 'Available' : current.availability;
@@ -158,6 +284,12 @@ class VehicleService {
     const idx = this.vehicles.findIndex(v => v.id === id);
     if (idx === -1) throw new Error(`Vehicle ${id} not found`);
 
+    try {
+      await vehiclesApi.unpublishVehicle(id);
+    } catch (err: any) {
+      console.warn('[VehicleService] Live unpublish fallback:', err?.message);
+    }
+
     this.vehicles[idx] = {
       ...this.vehicles[idx],
       isPublished: false,
@@ -173,6 +305,12 @@ class VehicleService {
   public async archiveVehicle(id: string): Promise<Vehicle> {
     const idx = this.vehicles.findIndex(v => v.id === id);
     if (idx === -1) throw new Error(`Vehicle ${id} not found`);
+
+    try {
+      await vehiclesApi.updateVehicle(id, { availability: 'Archived', is_published: false });
+    } catch (err: any) {
+      console.warn('[VehicleService] Live archive fallback:', err?.message);
+    }
 
     this.vehicles[idx] = {
       ...this.vehicles[idx],
@@ -193,6 +331,12 @@ class VehicleService {
   ): Promise<Vehicle> {
     const idx = this.vehicles.findIndex(v => v.id === id);
     if (idx === -1) throw new Error(`Vehicle ${id} not found`);
+
+    try {
+      await vehiclesApi.updateVehicle(id, { availability });
+    } catch (err: any) {
+      console.warn('[VehicleService] Live updateAvailability fallback:', err?.message);
+    }
 
     this.vehicles[idx] = {
       ...this.vehicles[idx],
@@ -241,7 +385,7 @@ class VehicleService {
     sort: SortOption = 'rating_desc',
     includeUnpublished: boolean = false
   ): Promise<Vehicle[]> {
-    let result = [...this.vehicles];
+    let result = await this.getAllVehicles(includeUnpublished);
 
     // Filter out unpublished or archived vehicles for customer discovery
     if (!includeUnpublished) {
@@ -271,34 +415,25 @@ class VehicleService {
 
     // 2. Filters
     if (filters) {
-      // Category
       if (filters.category && filters.category !== 'All') {
         result = result.filter(
           v => v.category.toLowerCase() === filters.category!.toLowerCase()
         );
       }
-
-      // Price Range
       if (filters.minPrice !== undefined) {
         result = result.filter(v => v.pricePerDay >= filters.minPrice!);
       }
       if (filters.maxPrice !== undefined) {
         result = result.filter(v => v.pricePerDay <= filters.maxPrice!);
       }
-
-      // Transmission
       if (filters.transmission && filters.transmission !== 'All') {
         result = result.filter(
           v => v.transmission.toLowerCase() === filters.transmission!.toLowerCase()
         );
       }
-
-      // Fuel
       if (filters.fuel && filters.fuel !== 'All') {
         result = result.filter(v => v.fuel.toLowerCase() === filters.fuel!.toLowerCase());
       }
-
-      // Seats
       if (filters.seats && filters.seats !== 'All') {
         if (filters.seats === 7) {
           result = result.filter(v => v.seats >= 7);
@@ -306,8 +441,6 @@ class VehicleService {
           result = result.filter(v => v.seats === filters.seats);
         }
       }
-
-      // Availability
       if (filters.availableOnly) {
         result = result.filter(v => v.availability === 'Available');
       }

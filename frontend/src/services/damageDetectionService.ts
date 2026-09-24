@@ -3,6 +3,7 @@ import {
   InspectionAnalysisResult,
   PhotoCategory,
 } from '../types';
+import { aiPricingApi } from '../api/aiPricingApi';
 
 export interface DamageDetectionServiceInterface {
   analyzePhotos(
@@ -59,7 +60,7 @@ class DamageDetectionService implements DamageDetectionServiceInterface {
   }
 
   /**
-   * Prototype AI Computer Vision analysis simulation
+   * Prototype AI Computer Vision analysis simulation with live backend endpoint integration
    */
   public async analyzePhotos(
     bookingId: string,
@@ -67,9 +68,47 @@ class DamageDetectionService implements DamageDetectionServiceInterface {
     photos: CapturedPhoto[],
     presetScenario: 'Clean' | 'MinorDamage' | 'ModerateDamage' | 'SevereDamage' = 'MinorDamage'
   ): Promise<InspectionAnalysisResult> {
-    // Realistic AI scanning pipeline delay
-    await new Promise<void>(resolve => setTimeout(() => resolve(), 1500));
+    try {
+      const photoMap: Record<string, string> = {};
+      photos.forEach(p => {
+        photoMap[p.category.toLowerCase()] = p.uri || 'https://images.unsplash.com/photo-1617788138017-80ad40651399';
+      });
 
+      const res = await aiPricingApi.analyzeDamagePhotos({
+        vehicle_id: vehicleId,
+        booking_id: bookingId,
+        photos: photoMap,
+      });
+
+      if (res.success && res.data) {
+        const live = res.data;
+        return {
+          inspectionId: `insp-ai-${Date.now().toString().slice(-6)}`,
+          vehicleId: live.vehicle_id,
+          bookingId,
+          analyzedAt: new Date().toISOString(),
+          overallSeverity: live.overall_severity,
+          estimatedRepairCost: live.estimated_repair_cost,
+          totalDamagesDetected: live.total_damages_detected,
+          aiSummary: live.ai_summary,
+          disclaimer: 'Velox Vision Neural Inspection Engine verified.',
+          findings: live.findings.map((f, idx) => ({
+            id: `find-live-${idx + 1}`,
+            category: (f.angle.charAt(0).toUpperCase() + f.angle.slice(1)) as PhotoCategory,
+            damageType: f.damage_type,
+            severity: f.severity as any,
+            locationOnPanel: f.location_on_panel,
+            repairEstimate: f.repair_estimate,
+            confidence: f.confidence,
+          })),
+        };
+      }
+    } catch (e: any) {
+      console.warn('[DamageDetectionService] Live CV analysis fallback to simulation:', e?.message);
+    }
+
+    // Realistic AI scanning pipeline delay
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 800));
     return this.generateMockAnalysis(bookingId, vehicleId, presetScenario);
   }
 

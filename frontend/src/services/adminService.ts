@@ -11,6 +11,7 @@ import {
   Vehicle,
 } from '../types';
 import { MOCK_VEHICLES } from './vehicleData';
+import { adminApi } from '../api/adminApi';
 
 type AdminChangeListener = () => void;
 
@@ -465,6 +466,56 @@ class AdminService {
     this.listeners.forEach(l => l());
   }
 
+  public async syncFromBackend(): Promise<void> {
+    try {
+      const [kpisRes, usersRes, provsRes, verifsRes, payRes, dispRes] = await Promise.allSettled([
+        adminApi.getKPIs(),
+        adminApi.getUsers(),
+        adminApi.getProviders(),
+        adminApi.getVerifications(),
+        adminApi.getPayments(),
+        adminApi.getDisputes(),
+      ]);
+
+      if (usersRes.status === 'fulfilled' && usersRes.value.success && usersRes.value.data.length > 0) {
+        this.users = usersRes.value.data.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          phone: u.phone || '+1 555 000 0000',
+          city: u.city || 'Austin, TX',
+          joinedDate: u.joinedDate || '2026-01-01',
+          verificationStatus: u.verificationStatus || 'Verified',
+          status: u.status || 'Active',
+          licenseNumber: u.licenseNumber,
+          businessName: u.businessName,
+          totalBookingsOrVehicles: u.totalBookingsOrVehicles || 0,
+        }));
+      }
+
+      if (dispRes.status === 'fulfilled' && dispRes.value.success && dispRes.value.data.length > 0) {
+        this.disputes = dispRes.value.data.map(d => ({
+          id: d.id,
+          bookingId: d.bookingId,
+          customerName: d.customerName,
+          providerName: d.providerName,
+          vehicleName: d.vehicleName,
+          disputedAmount: d.disputedAmount,
+          reason: d.reason,
+          status: d.status,
+          reportedAt: d.reportedAt,
+          evidence: d.evidence,
+          adminNotes: d.adminNotes,
+        }));
+      }
+
+      this.notify();
+    } catch (e: any) {
+      console.warn('[AdminService] syncFromBackend fallback:', e?.message);
+    }
+  }
+
   // --- Metrics ---
   public getKPIs(): AdminKPIs {
     const totalCustomers = this.users.filter(u => u.role === 'Customer').length * 156; // realistic extrapolation
@@ -496,6 +547,9 @@ class AdminService {
   }
 
   public updateUserStatus(id: string, status: 'Active' | 'Suspended'): void {
+    adminApi.updateUserStatus(id, status === 'Active').catch(e => {
+      console.warn('[AdminService] live updateUserStatus fallback:', e?.message);
+    });
     this.users = this.users.map(u => (u.id === id ? { ...u, status } : u));
     this.notify();
   }
@@ -537,6 +591,9 @@ class AdminService {
     status: VerificationStatus,
     notes?: string
   ): void {
+    adminApi.reviewVerification(id, { status, notes }).catch(e => {
+      console.warn('[AdminService] live reviewVerification fallback:', e?.message);
+    });
     this.providerVerifications = this.providerVerifications.map(item =>
       item.id === id ? { ...item, status, notes: notes || item.notes } : item
     );
@@ -586,6 +643,9 @@ class AdminService {
   }
 
   public updateDisputeStatus(id: string, status: DisputeStatus, adminNotes?: string): void {
+    adminApi.updateDispute(id, { status, admin_notes: adminNotes }).catch(e => {
+      console.warn('[AdminService] live updateDispute fallback:', e?.message);
+    });
     this.disputes = this.disputes.map(d =>
       d.id === id
         ? {

@@ -10,8 +10,82 @@ import {
   ReturnStatus,
 } from '../types';
 import { vehicleService } from './vehicleService';
+import { fleetApi } from '../api/fleetApi';
+import {
+  ApiDamageReportResponse,
+  ApiFleetTaskResponse,
+  ApiInspectionResponse,
+  ApiMaintenanceResponse,
+} from '../api/types';
 
 type FleetChangeListener = () => void;
+
+function mapApiMaintenance(m: ApiMaintenanceResponse): MaintenanceRecord {
+  return {
+    id: m.id,
+    vehicleId: m.vehicle_id,
+    vehicleName: m.vehicle_name,
+    vehiclePlate: m.vehicle_plate || 'FLT-001',
+    type: m.type,
+    dueDate: m.due_date,
+    completedDate: m.completed_date,
+    status: (m.status as MaintenanceStatus) || 'Scheduled',
+    estimatedCost: m.estimated_cost,
+    actualCost: m.actual_cost,
+    serviceCenter: m.service_center,
+    notes: m.notes,
+  };
+}
+
+function mapApiInspection(i: ApiInspectionResponse): FleetInspection {
+  return {
+    id: i.id,
+    vehicleId: i.vehicle_id,
+    vehicleName: i.vehicle_name,
+    bookingId: i.booking_id,
+    inspectorName: i.inspector_name,
+    date: i.date,
+    status: (i.status as InspectionStatus) || 'Completed',
+    type: (i.type as any) || 'Routine',
+    exteriorCondition: i.exterior_condition,
+    interiorCondition: i.interior_condition,
+    tiresAndBrakes: i.tires_and_brakes,
+    fuelLevel: i.fuel_level,
+    odometerReading: i.odometer_reading,
+    passed: i.passed,
+    notes: i.notes,
+  };
+}
+
+function mapApiDamage(d: ApiDamageReportResponse): DamageReport {
+  return {
+    id: d.id,
+    vehicleId: d.vehicle_id,
+    vehicleName: d.vehicle_name,
+    bookingId: d.booking_id,
+    customerName: d.customer_name,
+    reportedAt: d.reported_at,
+    damageStatus: d.damage_status,
+    description: d.description,
+    estimatedCharge: d.estimated_charge,
+    reviewStatus: (d.review_status as DamageReviewStatus) || 'Pending Review',
+    resolvedAt: d.resolved_at,
+  };
+}
+
+function mapApiTask(t: ApiFleetTaskResponse): FleetTask {
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    vehicleId: t.vehicle_id,
+    vehicleName: t.vehicle_name,
+    priority: (t.priority as any) || 'Medium',
+    dueTime: t.due_time,
+    status: (t.status as any) || 'Pending',
+    category: (t.category as any) || 'Preparation',
+  };
+}
 
 class FleetOperationsService {
   private maintenance: MaintenanceRecord[] = [
@@ -294,6 +368,40 @@ class FleetOperationsService {
 
   private listeners: FleetChangeListener[] = [];
 
+  constructor() {
+    this.syncFromBackend().catch(err => {
+      console.warn('[FleetOperationsService] Initial fleet sync note:', err?.message);
+    });
+  }
+
+  public async syncFromBackend(): Promise<void> {
+    try {
+      const [maintRes, inspRes, dmgRes, taskRes] = await Promise.allSettled([
+        fleetApi.getMaintenanceList(),
+        fleetApi.getInspections(),
+        fleetApi.getDamageReports(),
+        fleetApi.getTasks(),
+      ]);
+
+      if (maintRes.status === 'fulfilled' && maintRes.value.success && maintRes.value.data.length > 0) {
+        this.maintenance = maintRes.value.data.map(mapApiMaintenance);
+      }
+      if (inspRes.status === 'fulfilled' && inspRes.value.success && inspRes.value.data.length > 0) {
+        this.inspections = inspRes.value.data.map(mapApiInspection);
+      }
+      if (dmgRes.status === 'fulfilled' && dmgRes.value.success && dmgRes.value.data.length > 0) {
+        this.damageReports = dmgRes.value.data.map(mapApiDamage);
+      }
+      if (taskRes.status === 'fulfilled' && taskRes.value.success && taskRes.value.data.length > 0) {
+        this.tasks = taskRes.value.data.map(mapApiTask);
+      }
+
+      this.notify();
+    } catch (e: any) {
+      console.warn('[FleetOperationsService] syncFromBackend fallback:', e?.message);
+    }
+  }
+
   public subscribe(listener: FleetChangeListener): () => void {
     this.listeners.push(listener);
     return () => {
@@ -326,17 +434,40 @@ class FleetOperationsService {
   public async scheduleMaintenance(
     record: Omit<MaintenanceRecord, 'id'>
   ): Promise<MaintenanceRecord> {
+    const localId = `maint-${Date.now().toString().slice(-4)}`;
     const newRecord: MaintenanceRecord = {
       ...record,
-      id: `maint-${Date.now().toString().slice(-4)}`,
+      id: localId,
     };
-    this.maintenance = [newRecord, ...this.maintenance];
 
-    // Mark vehicle status as Maintenance if scheduled immediately
+    try {
+      const apiRes = await fleetApi.scheduleMaintenance({
+        vehicle_id: record.vehicleId,
+        vehicle_name: record.vehicleName,
+        vehicle_plate: record.vehiclePlate,
+        type: record.type,
+        due_date: record.dueDate,
+        estimated_cost: record.estimatedCost,
+        service_center: record.serviceCenter,
+        notes: record.notes,
+      });
+      if (apiRes.success && apiRes.data) {
+        const live = mapApiMaintenance(apiRes.data);
+        this.maintenance = [live, ...this.maintenance];
+        if (record.status === 'In Progress' || record.status === 'Scheduled') {
+          await vehicleService.updateAvailability(record.vehicleId, 'Maintenance');
+        }
+        this.notify();
+        return live;
+      }
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] scheduleMaintenance live fallback:', err?.message);
+    }
+
+    this.maintenance = [newRecord, ...this.maintenance];
     if (record.status === 'In Progress' || record.status === 'Scheduled') {
       await vehicleService.updateAvailability(record.vehicleId, 'Maintenance');
     }
-
     this.notify();
     return newRecord;
   }
@@ -350,6 +481,17 @@ class FleetOperationsService {
     const idx = this.maintenance.findIndex(m => m.id === id);
     if (idx === -1) throw new Error(`Maintenance record ${id} not found`);
 
+    try {
+      await fleetApi.updateMaintenance(id, {
+        status,
+        actual_cost: actualCost,
+        notes,
+        completed_date: status === 'Completed' ? new Date().toISOString().split('T')[0] : undefined,
+      });
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] updateMaintenance live fallback:', err?.message);
+    }
+
     const current = this.maintenance[idx];
     this.maintenance[idx] = {
       ...current,
@@ -359,7 +501,6 @@ class FleetOperationsService {
       completedDate: status === 'Completed' ? new Date().toISOString().split('T')[0] : current.completedDate,
     };
 
-    // If maintenance completed, return vehicle back to Available
     if (status === 'Completed') {
       await vehicleService.updateAvailability(current.vehicleId, 'Available');
     } else if (status === 'In Progress') {
@@ -385,17 +526,46 @@ class FleetOperationsService {
   public async createInspection(
     inspection: Omit<FleetInspection, 'id'>
   ): Promise<FleetInspection> {
+    const localId = `insp-${Date.now().toString().slice(-4)}`;
     const newInsp: FleetInspection = {
       ...inspection,
-      id: `insp-${Date.now().toString().slice(-4)}`,
+      id: localId,
     };
-    this.inspections = [newInsp, ...this.inspections];
 
-    // If failed, route vehicle to Maintenance
+    try {
+      const apiRes = await fleetApi.recordInspection({
+        vehicle_id: inspection.vehicleId,
+        vehicle_name: inspection.vehicleName,
+        booking_id: inspection.bookingId,
+        inspector_name: inspection.inspectorName,
+        date: inspection.date,
+        status: inspection.status,
+        type: inspection.type,
+        exterior_condition: inspection.exteriorCondition,
+        interior_condition: inspection.interiorCondition,
+        tires_and_brakes: inspection.tiresAndBrakes,
+        fuel_level: inspection.fuelLevel,
+        odometer_reading: inspection.odometerReading,
+        passed: inspection.passed,
+        notes: inspection.notes,
+      });
+      if (apiRes.success && apiRes.data) {
+        const live = mapApiInspection(apiRes.data);
+        this.inspections = [live, ...this.inspections];
+        if (!inspection.passed || inspection.status === 'Failed') {
+          await vehicleService.updateAvailability(inspection.vehicleId, 'Maintenance');
+        }
+        this.notify();
+        return live;
+      }
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] recordInspection live fallback:', err?.message);
+    }
+
+    this.inspections = [newInsp, ...this.inspections];
     if (!inspection.passed || inspection.status === 'Failed') {
       await vehicleService.updateAvailability(inspection.vehicleId, 'Maintenance');
     }
-
     this.notify();
     return newInsp;
   }
@@ -448,10 +618,7 @@ class FleetOperationsService {
     };
 
     this.returns[idx] = completedReturn;
-
-    // Reset vehicle availability back to Available
     await vehicleService.updateAvailability(current.vehicleId, 'Available');
-
     this.notify();
     return completedReturn;
   }
@@ -471,11 +638,33 @@ class FleetOperationsService {
   public async createDamageReport(
     report: Omit<DamageReport, 'id' | 'reportedAt'>
   ): Promise<DamageReport> {
+    const localId = `dmg-${Date.now().toString().slice(-4)}`;
     const newReport: DamageReport = {
       ...report,
-      id: `dmg-${Date.now().toString().slice(-4)}`,
+      id: localId,
       reportedAt: new Date().toISOString(),
     };
+
+    try {
+      const apiRes = await fleetApi.createDamageReport({
+        vehicle_id: report.vehicleId,
+        vehicle_name: report.vehicleName,
+        booking_id: report.bookingId,
+        customer_name: report.customerName,
+        damage_status: report.damageStatus,
+        description: report.description,
+        estimated_charge: report.estimatedCharge,
+      });
+      if (apiRes.success && apiRes.data) {
+        const live = mapApiDamage(apiRes.data);
+        this.damageReports = [live, ...this.damageReports];
+        this.notify();
+        return live;
+      }
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] createDamageReport live fallback:', err?.message);
+    }
+
     this.damageReports = [newReport, ...this.damageReports];
     this.notify();
     return newReport;
@@ -488,6 +677,15 @@ class FleetOperationsService {
   ): Promise<DamageReport> {
     const idx = this.damageReports.findIndex(d => d.id === id);
     if (idx === -1) throw new Error(`Damage report ${id} not found`);
+
+    try {
+      await fleetApi.updateDamageReport(id, {
+        review_status: resolution,
+        description: notes,
+      });
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] updateDamageReport live fallback:', err?.message);
+    }
 
     this.damageReports[idx] = {
       ...this.damageReports[idx],
@@ -511,9 +709,17 @@ class FleetOperationsService {
     const idx = this.tasks.findIndex(t => t.id === id);
     if (idx === -1) throw new Error(`Task ${id} not found`);
 
+    const newStatus = this.tasks[idx].status === 'Completed' ? 'Pending' : 'Completed';
+
+    try {
+      await fleetApi.updateTask(id, { status: newStatus });
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] updateTask live fallback:', err?.message);
+    }
+
     this.tasks[idx] = {
       ...this.tasks[idx],
-      status: this.tasks[idx].status === 'Completed' ? 'Pending' : 'Completed',
+      status: newStatus,
     };
 
     this.notify();
@@ -521,10 +727,32 @@ class FleetOperationsService {
   }
 
   public async addTask(task: Omit<FleetTask, 'id'>): Promise<FleetTask> {
+    const localId = `task-${Date.now().toString().slice(-4)}`;
     const newTask: FleetTask = {
       ...task,
-      id: `task-${Date.now().toString().slice(-4)}`,
+      id: localId,
     };
+
+    try {
+      const apiRes = await fleetApi.createTask({
+        title: task.title,
+        description: task.description,
+        vehicle_id: task.vehicleId,
+        vehicle_name: task.vehicleName,
+        priority: task.priority as any,
+        due_time: task.dueTime,
+        category: task.category as any,
+      });
+      if (apiRes.success && apiRes.data) {
+        const live = mapApiTask(apiRes.data);
+        this.tasks = [live, ...this.tasks];
+        this.notify();
+        return live;
+      }
+    } catch (err: any) {
+      console.warn('[FleetOperationsService] createTask live fallback:', err?.message);
+    }
+
     this.tasks = [newTask, ...this.tasks];
     this.notify();
     return newTask;
