@@ -71,7 +71,7 @@ class VehicleService {
 
   public async syncFromBackend(): Promise<Vehicle[]> {
     try {
-      const res = await vehiclesApi.getVehicles({ include_unapproved: true });
+      const res = await vehiclesApi.getVehicles({ include_archived: true });
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         const liveVehicles = res.data.map(mapApiVehicleToFrontend);
 

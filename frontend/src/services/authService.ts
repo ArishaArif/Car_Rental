@@ -209,7 +209,7 @@ class AuthService {
       for (const roleKey of Object.keys(DEMO_USERS) as UserRole[]) {
         const demo = DEMO_USERS[roleKey];
         if (demo.email.toLowerCase() === cleanEmail) {
-          if (cleanPass === demo.pass || cleanPass === 'password123' || cleanPass === 'Admin@123456') {
+          if (cleanPass === demo.pass) {
             const role = expectedRole || demo.user.role;
             const fallbackUser: AuthUser = {
               ...demo.user,

@@ -19,7 +19,7 @@ export interface VehicleFilterParams {
   max_price?: number;
   transmission?: string;
   fuel_type?: string;
-  include_unapproved?: boolean;
+  include_archived?: boolean;
 }
 
 export const vehiclesApi = {
@@ -60,7 +60,7 @@ export const vehiclesApi = {
     if (!id) {
       throw new Error('Vehicle ID is required');
     }
-    return apiClient.put<ApiVehicleResponse>(`/vehicles/${id}`, payload);
+    return apiClient.patch<ApiVehicleResponse>(`/vehicles/${id}`, payload);
   },
 
   /**

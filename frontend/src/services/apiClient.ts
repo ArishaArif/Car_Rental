@@ -44,7 +44,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = API_CONFIG.baseURL;
-    this.defaultTimeout = API_CONFIG.timeout || 15000;
+    this.defaultTimeout = API_CONFIG.timeoutMs || 15000;
   }
 
   public setAuthToken(token: string | null) {
