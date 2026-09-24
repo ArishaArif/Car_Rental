@@ -20,6 +20,7 @@ from .config import (
     MAX_NEW_TOKENS,
     REQUEST_TIMEOUT_SECONDS,
     TEMPERATURE,
+    REFUSAL_TEXT,
 )
 
 
@@ -51,13 +52,9 @@ class Chatbot:
 
         # First guardrail layer: cheap keyword pre-filter for obvious injection attempts
         if _looks_off_topic_or_injection(user_message):
-            return (
-                "I'm the PredictDrive assistant, and I can only help with questions "
-                "about our car rental service — vehicles, bookings, pricing, or policies. "
-                "I'm not able to help with anything outside of that."
-            )
+            return REFUSAL_TEXT
 
-        # Build messages array including system prompt + few-shot training examples
+        # Build messages array: system prompt + few-shot examples + real question
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         messages.extend(FEW_SHOT_EXAMPLES)
         messages.append({"role": "user", "content": user_message})
@@ -93,7 +90,8 @@ class Chatbot:
             )
         if response.status_code == 400 and "model_not_supported" in response.text:
             raise ChatbotError(
-                "This model isn't available through any enabled inference provider on your HF account."
+                "This model isn't available through any enabled inference provider "
+                "on your HF account."
             )
         if response.status_code != 200:
             raise ChatbotError(f"Hugging Face API error {response.status_code}: {response.text}")
@@ -109,3 +107,6 @@ if __name__ == "__main__":
     bot = Chatbot()
     print("Testing off-topic enforcement...")
     print(bot.ask("What's the capital of France?"))
+    print()
+    print("Testing on-topic question...")
+    print(bot.ask("What SUVs do you have available this weekend?"))
