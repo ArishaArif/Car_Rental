@@ -5,8 +5,6 @@
 
 import { apiClient, ApiResponse } from '../services/apiClient';
 import {
-  ApiForgotPasswordRequest,
-  ApiLoginRequest,
   ApiRegisterRequest,
   ApiResendOtpRequest,
   ApiResetPasswordRequest,

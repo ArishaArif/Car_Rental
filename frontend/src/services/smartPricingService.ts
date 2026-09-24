@@ -38,7 +38,7 @@ class SmartPricingService implements SmartPricingServiceInterface {
       if (res.success && res.data) {
         return mapApiPricingMetrics(res.data);
       }
-    } catch (e: any) {
+    } catch {
       // fallback to simulated heuristic
     }
 
@@ -151,7 +151,7 @@ class SmartPricingService implements SmartPricingServiceInterface {
       if (res.success && res.data && res.data.length > 0) {
         return res.data.map(mapApiPricingMetrics);
       }
-    } catch (e: any) {
+    } catch {
       // fallback
     }
 

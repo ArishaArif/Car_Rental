@@ -140,7 +140,7 @@ class VehicleService {
         this.notifyListeners();
         return mapped;
       }
-    } catch (err) {
+    } catch {
       // not found on backend or offline
     }
 

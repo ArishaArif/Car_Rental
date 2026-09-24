@@ -241,7 +241,7 @@ class SubscriptionService {
         this.currentSubscription = mapApiSubscription(res.data);
         return this.currentSubscription;
       }
-    } catch (e) {
+    } catch {
       // offline fallback
     }
     return JSON.parse(JSON.stringify(this.currentSubscription));
@@ -256,7 +256,7 @@ class SubscriptionService {
       if (res.success && res.data && res.data.length > 0) {
         return res.data.map(mapApiPlan);
       }
-    } catch (e) {
+    } catch {
       // offline fallback
     }
     return [...SUBSCRIPTION_PLANS];
@@ -288,7 +288,7 @@ class SubscriptionService {
         this.billingHistory = res.data.map(mapApiInvoice);
         return [...this.billingHistory];
       }
-    } catch (e) {
+    } catch {
       // offline fallback
     }
     return [...this.billingHistory];

@@ -468,7 +468,7 @@ class AdminService {
 
   public async syncFromBackend(): Promise<void> {
     try {
-      const [kpisRes, usersRes, provsRes, verifsRes, payRes, dispRes] = await Promise.allSettled([
+      const [_kpisRes, usersRes, _provsRes, _verifsRes, _payRes, dispRes] = await Promise.allSettled([
         adminApi.getKPIs(),
         adminApi.getUsers(),
         adminApi.getProviders(),
