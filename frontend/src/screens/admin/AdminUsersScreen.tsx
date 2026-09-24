@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList, AdminUserRecord, UserRole } from '../../types';
 import { useTheme } from '../../theme';
@@ -325,98 +325,100 @@ export const AdminUsersScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.modalBody}>
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Full Name</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {activeUserDetail.name}
-                      </Text>
-                    </View>
-
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Email</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {activeUserDetail.email}
-                      </Text>
-                    </View>
-
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Role</Text>
-                      <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '700' }]}>
-                        {activeUserDetail.role}
-                      </Text>
-                    </View>
-
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Contact Phone</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {activeUserDetail.phone}
-                      </Text>
-                    </View>
-
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Registered City</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {activeUserDetail.city}
-                      </Text>
-                    </View>
-
-                    {activeUserDetail.licenseNumber ? (
+                  <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollBody} contentContainerStyle={styles.modalScrollContent}>
+                    <View style={styles.modalBody}>
                       <View style={styles.dossierRow}>
-                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
-                          Driver License
-                        </Text>
-                        <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
-                          {activeUserDetail.licenseNumber}
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Full Name</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {activeUserDetail.name}
                         </Text>
                       </View>
-                    ) : null}
 
-                    {activeUserDetail.businessName ? (
                       <View style={styles.dossierRow}>
-                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
-                          Registered Business
-                        </Text>
-                        <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
-                          {activeUserDetail.businessName}
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Email</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {activeUserDetail.email}
                         </Text>
                       </View>
-                    ) : null}
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
-                        Verification Status
-                      </Text>
-                      <Text
-                        style={[
-                          styles.dossierValue,
-                          {
-                            color: getVerificationBadgeStyle(activeUserDetail.verificationStatus).text,
-                            fontWeight: '700',
-                          },
-                        ]}
-                      >
-                        {activeUserDetail.verificationStatus}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Role</Text>
+                        <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '700' }]}>
+                          {activeUserDetail.role}
+                        </Text>
+                      </View>
 
-                    <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
-                        Account Standing
-                      </Text>
-                      <Text
-                        style={[
-                          styles.dossierValue,
-                          {
-                            color: activeUserDetail.status === 'Active' ? colors.success || '#10B981' : colors.danger,
-                            fontWeight: '800',
-                          },
-                        ]}
-                      >
-                        {activeUserDetail.status.toUpperCase()}
-                      </Text>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Contact Phone</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {activeUserDetail.phone}
+                        </Text>
+                      </View>
+
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Registered City</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {activeUserDetail.city}
+                        </Text>
+                      </View>
+
+                      {activeUserDetail.licenseNumber ? (
+                        <View style={styles.dossierRow}>
+                          <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
+                            Driver License
+                          </Text>
+                          <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
+                            {activeUserDetail.licenseNumber}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {activeUserDetail.businessName ? (
+                        <View style={styles.dossierRow}>
+                          <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
+                            Registered Business
+                          </Text>
+                          <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
+                            {activeUserDetail.businessName}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
+                          Verification Status
+                        </Text>
+                        <Text
+                          style={[
+                            styles.dossierValue,
+                            {
+                              color: getVerificationBadgeStyle(activeUserDetail.verificationStatus).text,
+                              fontWeight: '700',
+                            },
+                          ]}
+                        >
+                          {activeUserDetail.verificationStatus}
+                        </Text>
+                      </View>
+
+                      <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>
+                          Account Standing
+                        </Text>
+                        <Text
+                          style={[
+                            styles.dossierValue,
+                            {
+                              color: activeUserDetail.status === 'Active' ? colors.success || '#10B981' : colors.danger,
+                              fontWeight: '800',
+                            },
+                          ]}
+                        >
+                          {activeUserDetail.status.toUpperCase()}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  </ScrollView>
 
                   <View style={styles.modalFooter}>
                     <Button
@@ -561,6 +563,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalScrollBody: {
+    flexShrink: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 4,
   },
   modalBody: {
     marginBottom: 16,

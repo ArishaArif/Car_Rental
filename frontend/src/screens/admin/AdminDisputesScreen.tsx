@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList, DisputeRecord, DisputeStatus } from '../../types';
@@ -95,7 +95,12 @@ export const AdminDisputesScreen: React.FC<Props> = ({ navigation, route }) => {
     >
       <View style={[styles.content, { padding: spacing.md }]}>
         {/* Status Filter Tabs */}
-        <View style={styles.tabRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabScroll}
+          contentContainerStyle={styles.tabScrollContainer}
+        >
           {(['All', 'Open', 'Under Review', 'Resolved'] as const).map(tab => {
             const isSelected = selectedStatus === tab;
             const count =
@@ -129,7 +134,7 @@ export const AdminDisputesScreen: React.FC<Props> = ({ navigation, route }) => {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* Dispute Cards List */}
         {filteredDisputes.length === 0 ? (
@@ -378,20 +383,23 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 40,
   },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 6,
+  tabScroll: {
     marginBottom: 16,
   },
+  tabScrollContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 4,
+  },
   tabButton: {
-    flex: 1,
     paddingVertical: 8,
+    paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   tabButtonText: {
-    fontSize: 10,
+    fontSize: 11,
   },
   emptyCard: {
     alignItems: 'center',

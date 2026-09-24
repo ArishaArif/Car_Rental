@@ -246,7 +246,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   metricCard: {
-    width: '48%',
+    flexBasis: '47%',
+    flexGrow: 1,
     borderWidth: 1,
     minHeight: 90,
     justifyContent: 'space-between',

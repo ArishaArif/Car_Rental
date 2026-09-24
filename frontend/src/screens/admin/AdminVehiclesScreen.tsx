@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, Alert, ScrollView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AdminStackParamList, Vehicle, VehicleCategory } from '../../types';
 import { useTheme } from '../../theme';
@@ -91,7 +91,12 @@ export const AdminVehiclesScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         {/* Category Filter Tabs */}
-        <View style={styles.tabRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabScroll}
+          contentContainerStyle={styles.tabScrollContainer}
+        >
           {(['All', 'Sedan', 'SUV', 'Luxury', 'Economy'] as const).map(cat => {
             const isSelected = selectedCategory === cat;
             return (
@@ -122,7 +127,7 @@ export const AdminVehiclesScreen: React.FC<Props> = ({ navigation }) => {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* Vehicles List */}
         {filteredVehicles.length === 0 ? (
@@ -285,66 +290,68 @@ export const AdminVehiclesScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
 
-                  <Image source={{ uri: selectedVehicle.image }} style={styles.modalImage} resizeMode="cover" />
+                  <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollBody} contentContainerStyle={styles.modalScrollContent}>
+                    <Image source={{ uri: selectedVehicle.image }} style={styles.modalImage} resizeMode="cover" />
 
-                  <View style={styles.modalBody}>
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Asset ID</Text>
-                      <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
-                        {selectedVehicle.id}
-                      </Text>
-                    </View>
+                    <View style={styles.modalBody}>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Asset ID</Text>
+                        <Text style={[styles.dossierValue, { color: colors.accent, fontWeight: '700' }]}>
+                          {selectedVehicle.id}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Make / Model</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
-                        {selectedVehicle.year} {selectedVehicle.brand} {selectedVehicle.model}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Make / Model</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary, fontWeight: '700' }]}>
+                          {selectedVehicle.year} {selectedVehicle.brand} {selectedVehicle.model}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Category</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedVehicle.category}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Category</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedVehicle.category}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Daily Rental Base</Text>
-                      <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '800' }]}>
-                        ${selectedVehicle.pricePerDay} USD
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Daily Rental Base</Text>
+                        <Text style={[styles.dossierValue, { color: colors.primary, fontWeight: '800' }]}>
+                          ${selectedVehicle.pricePerDay} USD
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Assigned Depot</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedVehicle.location}
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Assigned Depot</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedVehicle.location}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dossierRow}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Seats & Doors</Text>
-                      <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
-                        {selectedVehicle.seats} Seats • {selectedVehicle.doors} Doors
-                      </Text>
-                    </View>
+                      <View style={styles.dossierRow}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Seats & Doors</Text>
+                        <Text style={[styles.dossierValue, { color: colors.textPrimary }]}>
+                          {selectedVehicle.seats} Seats • {selectedVehicle.doors} Doors
+                        </Text>
+                      </View>
 
-                    <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
-                      <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Listing Status</Text>
-                      <Text
-                        style={[
-                          styles.dossierValue,
-                          {
-                            color: selectedVehicle.isSuspended ? colors.danger : colors.success || '#10B981',
-                            fontWeight: '800',
-                          },
-                        ]}
-                      >
-                        {selectedVehicle.isSuspended ? 'SUSPENDED FROM PLATFORM' : 'ACTIVE & DISPATCHABLE'}
-                      </Text>
+                      <View style={[styles.dossierRow, { borderBottomWidth: 0 }]}>
+                        <Text style={[styles.dossierLabel, { color: colors.textSecondary }]}>Listing Status</Text>
+                        <Text
+                          style={[
+                            styles.dossierValue,
+                            {
+                              color: selectedVehicle.isSuspended ? colors.danger : colors.success || '#10B981',
+                              fontWeight: '800',
+                            },
+                          ]}
+                        >
+                          {selectedVehicle.isSuspended ? 'SUSPENDED FROM PLATFORM' : 'ACTIVE & DISPATCHABLE'}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
+                  </ScrollView>
 
                   <View style={styles.modalFooter}>
                     <Button
@@ -371,14 +378,17 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginBottom: 12,
   },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
+  tabScroll: {
     marginBottom: 16,
   },
+  tabScrollContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 4,
+  },
   tabButton: {
-    flex: 1,
     paddingVertical: 8,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -481,6 +491,12 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  modalScrollBody: {
+    flexShrink: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 4,
   },
   modalBody: {
     marginBottom: 14,
