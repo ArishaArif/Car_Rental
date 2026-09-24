@@ -1,8 +1,22 @@
 import { AppNotification, UserRole } from '../types';
+import { notificationsApi } from '../api/notificationsApi';
+import { ApiNotificationResponse } from '../api/types';
 
 type NotificationChangeListener = () => void;
 
-const delay = (ms = 150): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+function mapApiNotification(n: ApiNotificationResponse): AppNotification {
+  const cat = n.type ? (n.type.charAt(0).toUpperCase() + n.type.slice(1)) : 'System';
+  return {
+    id: n.id,
+    title: n.title,
+    message: n.body,
+    category: (cat as any) || 'System',
+    timestamp: 'Just now',
+    isRead: n.is_read,
+    targetRole: (n.role as any) || undefined,
+    metadata: n.reference_id ? { referenceId: n.reference_id } : undefined,
+  };
+}
 
 class NotificationService {
   private listeners: NotificationChangeListener[] = [];
@@ -101,32 +115,22 @@ class NotificationService {
       timestamp: '5 days ago',
       isRead: true,
       targetRole: 'Customer',
-      metadata: { bookingId: 'VLX-BK-34888', amount: 200 },
+      actionRoute: 'MyBookings',
     },
     {
       id: 'notif-009',
-      title: 'AI Damage Inspection Completed',
+      title: 'Driver License Verified',
       message:
-        'Pre-trip digital photo audit verified clean exterior panels for booking #VLX-BK-34903. Safe travels!',
-      category: 'Rental',
-      timestamp: '6 days ago',
+        'Your uploaded driving license (DL-98421094) has been verified. You can now unlock instant bookings.',
+      category: 'System',
+      timestamp: '1 week ago',
       isRead: true,
       targetRole: 'Customer',
-      metadata: { bookingId: 'VLX-BK-34903' },
+      actionRoute: 'CustomerProfile',
     },
     {
       id: 'notif-010',
-      title: 'Turnaround Inspection Required',
-      message:
-        'Vehicle #veh-civic-02 expected at depot within 45 minutes. Turnaround bay #3 assigned.',
-      category: 'Rental',
-      timestamp: '1 day ago',
-      isRead: false,
-      targetRole: 'FleetManager',
-    },
-    {
-      id: 'notif-011',
-      title: 'Platform Policy & Compliance Update',
+      title: 'Host Commercial Insurance Compliance Update',
       message:
         'Velox Mobility terms of service and insurance liability schedule updated for all commercial hosts.',
       category: 'System',
@@ -135,6 +139,27 @@ class NotificationService {
       targetRole: 'Admin',
     },
   ];
+
+  constructor() {
+    this.syncFromBackend().catch(err => {
+      console.warn('[NotificationService] Sync note:', err?.message);
+    });
+  }
+
+  public async syncFromBackend(): Promise<void> {
+    try {
+      const res = await notificationsApi.getNotifications();
+      if (res.success && res.data && res.data.length > 0) {
+        const live = res.data.map(mapApiNotification);
+        const liveIds = new Set(live.map(n => n.id));
+        const kept = this.notifications.filter(n => !liveIds.has(n.id));
+        this.notifications = [...live, ...kept];
+        this.notify();
+      }
+    } catch (e: any) {
+      console.warn('[NotificationService] syncFromBackend fallback:', e?.message);
+    }
+  }
 
   public subscribe(listener: NotificationChangeListener): () => void {
     this.listeners.push(listener);
@@ -151,11 +176,9 @@ class NotificationService {
    * Retrieve notifications optionally filtered by role
    */
   public async getNotifications(role?: UserRole): Promise<AppNotification[]> {
-    await delay(80);
     if (!role) {
       return [...this.notifications];
     }
-    // Return notifications targeted to this role or general system ones
     return this.notifications.filter(
       n => !n.targetRole || n.targetRole === role || n.category === 'System'
     );
@@ -173,10 +196,15 @@ class NotificationService {
    * Mark a single notification as read
    */
   public async markAsRead(id: string): Promise<AppNotification> {
-    await delay(50);
     const idx = this.notifications.findIndex(n => n.id === id);
     if (idx === -1) {
       throw new Error(`Notification ${id} not found`);
+    }
+
+    try {
+      await notificationsApi.markAsRead(id);
+    } catch (e: any) {
+      console.warn('[NotificationService] live markAsRead fallback:', e?.message);
     }
 
     this.notifications[idx] = {
@@ -192,7 +220,12 @@ class NotificationService {
    * Mark all notifications as read
    */
   public async markAllAsRead(role?: UserRole): Promise<void> {
-    await delay(80);
+    try {
+      await notificationsApi.markAllAsRead();
+    } catch (e: any) {
+      console.warn('[NotificationService] live markAllAsRead fallback:', e?.message);
+    }
+
     this.notifications = this.notifications.map(n => {
       if (!role || !n.targetRole || n.targetRole === role || n.category === 'System') {
         return { ...n, isRead: true };
@@ -207,7 +240,6 @@ class NotificationService {
    * Delete notification
    */
   public async deleteNotification(id: string): Promise<void> {
-    await delay(50);
     this.notifications = this.notifications.filter(n => n.id !== id);
     this.notify();
   }

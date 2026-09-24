@@ -5,6 +5,12 @@ import {
   SubscriptionPlanId,
   SubscriptionUsage,
 } from '../types';
+import { subscriptionsApi } from '../api/subscriptionsApi';
+import {
+  ApiBillingInvoiceRecordResponse,
+  ApiProviderSubscriptionResponse,
+  ApiSubscriptionPlanResponse,
+} from '../api/types';
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
@@ -81,7 +87,58 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 
 type SubscriptionChangeListener = () => void;
 
-const delay = (ms = 400): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+function mapApiPlan(p: ApiSubscriptionPlanResponse): SubscriptionPlan {
+  return {
+    id: p.id,
+    name: p.name,
+    tagline: p.tagline,
+    monthlyPrice: p.monthly_price,
+    annualPrice: p.annual_price,
+    vehicleLimit: p.vehicle_limit,
+    bookingLimit: p.booking_limit,
+    aiAssistantAccess: p.ai_assistant_access,
+    smartPricingAccess: p.smart_pricing_access,
+    analytics: p.analytics,
+    teamMembers: p.team_members,
+    support: p.support,
+    features: p.features,
+  };
+}
+
+function mapApiSubscription(s: ApiProviderSubscriptionResponse): ProviderSubscription {
+  return {
+    id: s.id,
+    providerId: String(s.provider_id),
+    planId: s.plan_id,
+    status: (s.status as any) || 'Active',
+    billingCycle: s.billing_cycle,
+    startDate: s.start_date,
+    renewalDate: s.renewal_date,
+    usage: {
+      vehiclesUsed: s.usage?.vehiclesUsed || 0,
+      vehicleLimit: s.usage?.vehicleLimit || 25,
+      bookingsUsed: s.usage?.bookingsUsed || 0,
+      bookingLimit: s.usage?.bookingLimit || 150,
+      teamSeatsUsed: s.usage?.teamSeatsUsed || 1,
+      teamSeatsLimit: s.usage?.teamSeatsLimit || 5,
+    },
+    enabledFeatures: s.enabled_features || [],
+  };
+}
+
+function mapApiInvoice(inv: ApiBillingInvoiceRecordResponse): BillingInvoiceRecord {
+  return {
+    id: inv.id,
+    invoiceNumber: inv.invoice_number,
+    date: inv.date,
+    amount: inv.amount,
+    planName: inv.plan_name,
+    billingCycle: (inv.billing_cycle as any) || 'monthly',
+    status: (inv.status as any) || 'Paid',
+    paymentMethod: inv.payment_method,
+    pdfUrl: inv.pdf_url || `https://velox.mobility/invoices/${inv.invoice_number}.pdf`,
+  };
+}
 
 class SubscriptionService {
   private listeners: SubscriptionChangeListener[] = [];
@@ -136,29 +193,32 @@ class SubscriptionService {
       paymentMethod: 'Visa •••• 4242',
       pdfUrl: 'https://velox.mobility/invoices/INV-SUB-2026-08.pdf',
     },
-    {
-      id: 'inv-sub-003',
-      invoiceNumber: 'INV-SUB-2026-07',
-      date: '2026-07-15',
-      amount: 149.0,
-      planName: 'Professional Plan',
-      billingCycle: 'monthly',
-      status: 'Paid',
-      paymentMethod: 'Visa •••• 4242',
-      pdfUrl: 'https://velox.mobility/invoices/INV-SUB-2026-07.pdf',
-    },
-    {
-      id: 'inv-sub-004',
-      invoiceNumber: 'INV-SUB-2026-06',
-      date: '2026-06-15',
-      amount: 149.0,
-      planName: 'Professional Plan',
-      billingCycle: 'monthly',
-      status: 'Paid',
-      paymentMethod: 'Visa •••• 4242',
-      pdfUrl: 'https://velox.mobility/invoices/INV-SUB-2026-06.pdf',
-    },
   ];
+
+  constructor() {
+    this.syncFromBackend().catch(err => {
+      console.warn('[SubscriptionService] Sync note:', err?.message);
+    });
+  }
+
+  public async syncFromBackend(): Promise<void> {
+    try {
+      const [subRes, invRes] = await Promise.allSettled([
+        subscriptionsApi.getCurrentSubscription(),
+        subscriptionsApi.getInvoices(),
+      ]);
+
+      if (subRes.status === 'fulfilled' && subRes.value.success && subRes.value.data) {
+        this.currentSubscription = mapApiSubscription(subRes.value.data);
+      }
+      if (invRes.status === 'fulfilled' && invRes.value.success && invRes.value.data.length > 0) {
+        this.billingHistory = invRes.value.data.map(mapApiInvoice);
+      }
+      this.notify();
+    } catch (e: any) {
+      console.warn('[SubscriptionService] syncFromBackend fallback:', e?.message);
+    }
+  }
 
   public subscribe(listener: SubscriptionChangeListener): () => void {
     this.listeners.push(listener);
@@ -175,7 +235,15 @@ class SubscriptionService {
    * Retrieve active subscription overview
    */
   public async getCurrentSubscription(): Promise<ProviderSubscription> {
-    await delay(100);
+    try {
+      const res = await subscriptionsApi.getCurrentSubscription();
+      if (res.success && res.data) {
+        this.currentSubscription = mapApiSubscription(res.data);
+        return this.currentSubscription;
+      }
+    } catch (e) {
+      // offline fallback
+    }
     return JSON.parse(JSON.stringify(this.currentSubscription));
   }
 
@@ -183,7 +251,14 @@ class SubscriptionService {
    * Retrieve all available plans
    */
   public async getPlans(): Promise<SubscriptionPlan[]> {
-    await delay(100);
+    try {
+      const res = await subscriptionsApi.getPlans();
+      if (res.success && res.data && res.data.length > 0) {
+        return res.data.map(mapApiPlan);
+      }
+    } catch (e) {
+      // offline fallback
+    }
     return [...SUBSCRIPTION_PLANS];
   }
 
@@ -191,22 +266,31 @@ class SubscriptionService {
    * Get plan details by ID
    */
   public async getPlanById(planId: SubscriptionPlanId): Promise<SubscriptionPlan | undefined> {
-    return SUBSCRIPTION_PLANS.find(p => p.id === planId);
+    const plans = await this.getPlans();
+    return plans.find(p => p.id === planId);
   }
 
   /**
    * Retrieve live usage stats
    */
   public async getUsage(): Promise<SubscriptionUsage> {
-    await delay(100);
-    return { ...this.currentSubscription.usage };
+    const sub = await this.getCurrentSubscription();
+    return { ...sub.usage };
   }
 
   /**
    * Retrieve invoice billing history
    */
   public async getBillingHistory(): Promise<BillingInvoiceRecord[]> {
-    await delay(150);
+    try {
+      const res = await subscriptionsApi.getInvoices();
+      if (res.success && res.data && res.data.length > 0) {
+        this.billingHistory = res.data.map(mapApiInvoice);
+        return [...this.billingHistory];
+      }
+    } catch (e) {
+      // offline fallback
+    }
     return [...this.billingHistory];
   }
 
@@ -217,16 +301,26 @@ class SubscriptionService {
     targetPlanId: SubscriptionPlanId,
     billingCycle: 'monthly' | 'annual' = 'monthly'
   ): Promise<ProviderSubscription> {
-    await delay(700); // Simulate API latency
-
     const targetPlan = SUBSCRIPTION_PLANS.find(p => p.id === targetPlanId);
     if (!targetPlan) {
       throw new Error(`Invalid plan ID: ${targetPlanId}`);
     }
 
-    const price = billingCycle === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
+    try {
+      const apiRes = await subscriptionsApi.upgradeSubscription({
+        target_plan_id: targetPlanId,
+        billing_cycle: billingCycle,
+      });
+      if (apiRes.success && apiRes.data) {
+        this.currentSubscription = mapApiSubscription(apiRes.data);
+        this.notify();
+        return this.currentSubscription;
+      }
+    } catch (err: any) {
+      console.warn('[SubscriptionService] upgradePlan live fallback:', err?.message);
+    }
 
-    // Add new billing invoice record
+    const price = billingCycle === 'annual' ? targetPlan.annualPrice : targetPlan.monthlyPrice;
     const newInvoice: BillingInvoiceRecord = {
       id: `inv-sub-${Date.now().toString().slice(-4)}`,
       invoiceNumber: `INV-SUB-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`,
@@ -241,7 +335,6 @@ class SubscriptionService {
 
     this.billingHistory.unshift(newInvoice);
 
-    // Update active subscription
     this.currentSubscription = {
       ...this.currentSubscription,
       planId: targetPlanId,
@@ -265,7 +358,6 @@ class SubscriptionService {
    * Cancel subscription (downgrade to Starter at period end)
    */
   public async cancelSubscription(): Promise<ProviderSubscription> {
-    await delay(400);
     this.currentSubscription.status = 'Cancelled';
     this.notify();
     return JSON.parse(JSON.stringify(this.currentSubscription));
