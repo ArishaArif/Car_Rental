@@ -77,7 +77,7 @@ async def update_maintenance(
     for key, val in updates.items():
         setattr(rec, key, val)
 
-    # If completed, free up vehicle
+    # If completed (AFTER applying updates), free up vehicle
     if rec.status == "Completed":
         rec.completed_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         v_res = await db.execute(select(Vehicle).where(Vehicle.id == rec.vehicle_id))

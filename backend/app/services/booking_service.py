@@ -5,6 +5,7 @@ Booking service — reservation lifecycle, pricing calculator, pickup validation
 from typing import Optional, List, Dict, Any
 import uuid
 import random
+import secrets
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, desc
@@ -117,14 +118,15 @@ async def create_booking(
             detail=f"Vehicle '{data.vehicle_id}' not found",
         )
 
-    if vehicle.availability in ("Maintenance", "Archived"):
+    if vehicle.availability in ("Maintenance", "Archived", "Booked", "Active Rental"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Vehicle is not available for booking (Status: {vehicle.availability})",
         )
 
     pricing = calculate_pricing_breakdown(vehicle.price_per_day, data.rental_days)
-    pickup_code = f"{random.randint(1000, 9999)}"
+    # Use cryptographically secure random for pickup code
+    pickup_code = str(1000 + secrets.randbelow(9000))
 
     customer_dict = data.customer_details.model_dump(by_alias=True)
 
