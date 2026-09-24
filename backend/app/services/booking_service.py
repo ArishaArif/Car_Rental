@@ -166,6 +166,13 @@ async def confirm_booking(db: AsyncSession, booking_id: str, user: User) -> Book
 
 async def cancel_booking(db: AsyncSession, booking_id: str, user: User) -> Booking:
     booking = await get_booking_by_id(db, booking_id, user)
+
+    if booking.status in ("Completed", "Cancelled"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot cancel a booking with status '{booking.status}'",
+        )
+
     booking.status = "Cancelled"
 
     # Free up vehicle
