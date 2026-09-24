@@ -135,7 +135,7 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <>
           {leftIcon ? <View style={styles.iconRight}>{leftIcon}</View> : null}
-          <Text style={[currentTextStyle, textStyle]} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[currentTextStyle, textStyle]} >
             {title}
           </Text>
           {rightIcon ? <View style={styles.iconLeft}>{rightIcon}</View> : null}
