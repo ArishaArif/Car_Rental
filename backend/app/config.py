@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     # ── Google OAuth2 ─────────────────────────────────
     GOOGLE_CLIENT_ID: str = "dev-google-client-id.apps.googleusercontent.com"
 
+    # ── Brevo Email ──────────────────────────────────
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER_EMAIL: str = "muhammadzaid51218@gmail.com"
+    BREVO_SENDER_NAME: str = "Velox Car Rental"
+
     # ── Resend Email ─────────────────────────────────
     RESEND_API_KEY: str = "re_dev_placeholder_key"
     RESEND_FROM_EMAIL: str = "noreply@yourdomain.com"

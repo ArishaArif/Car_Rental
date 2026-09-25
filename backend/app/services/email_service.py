@@ -91,6 +91,8 @@ def _build_otp_email_html(full_name: str, otp_code: str, purpose: str, expire_mi
     """
 
 
+import httpx
+
 async def send_otp_email(
     recipient_email: str,
     full_name: str,
@@ -98,7 +100,7 @@ async def send_otp_email(
     purpose: str = "email_verification",
 ) -> bool:
     """
-    Send an OTP email via Resend.com.
+    Send an OTP email with Brevo (Primary) and Resend (Fallback).
 
     Args:
         recipient_email: Target email address
@@ -114,27 +116,58 @@ async def send_otp_email(
         "email_verification": "🔐 Verify Your Email — Car Rental",
         "password_reset": "🔑 Reset Your Password — Car Rental",
     }
+    subject = subjects.get(purpose, "Your OTP Code — Car Rental")
+    html_content = _build_otp_email_html(
+        full_name=full_name,
+        otp_code=otp_code,
+        purpose=purpose,
+        expire_minutes=settings.OTP_EXPIRE_MINUTES,
+    )
 
+    # 1. Primary Delivery: Brevo API (Supports sending to any user email)
+    if settings.BREVO_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    "https://api.brevo.com/v3/smtp/email",
+                    headers={
+                        "api-key": settings.BREVO_API_KEY,
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "sender": {
+                            "name": settings.BREVO_SENDER_NAME,
+                            "email": settings.BREVO_SENDER_EMAIL,
+                        },
+                        "to": [{"email": recipient_email, "name": full_name}],
+                        "subject": subject,
+                        "htmlContent": html_content,
+                    },
+                )
+                if res.status_code in (200, 201, 202):
+                    print(f"[EmailService] Brevo email successfully delivered to {recipient_email}")
+                    return True
+                else:
+                    print(f"[EmailService] Brevo returned {res.status_code}: {res.text}")
+        except Exception as e:
+            print(f"[EmailService] Brevo request failed: {e}")
+
+    # 2. Fallback Delivery: Resend API
     try:
+        resend.api_key = settings.RESEND_API_KEY
         from_email = settings.RESEND_FROM_EMAIL
         if not from_email or "yourdomain.com" in from_email:
-            from_email = "Car Rental <onboarding@resend.dev>"
+            from_email = "Velox Security <onboarding@resend.dev>"
 
         params = {
             "from": from_email,
             "to": [recipient_email],
-            "subject": subjects.get(purpose, "Your OTP Code — Car Rental"),
-            "html": _build_otp_email_html(
-                full_name=full_name,
-                otp_code=otp_code,
-                purpose=purpose,
-                expire_minutes=settings.OTP_EXPIRE_MINUTES,
-            ),
+            "subject": subject,
+            "html": html_content,
         }
         resend.Emails.send(params)
         print(f"[EmailService] Resend email successfully delivered to {recipient_email}")
         return True
     except Exception as e:
-        # In production, log this properly
         print(f"[EmailService] Failed to send email to {recipient_email}: {e}")
         return False
