@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList, UserRole } from '../../types';
@@ -26,6 +26,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(true);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -35,6 +36,16 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
     confirmPassword?: string;
     terms?: string;
   }>({});
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleRoleChange = async (newRole: UserRole) => {
     setSelectedRole(newRole);
@@ -109,6 +120,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
     <ScreenContainer
       scrollable
       scrollViewProps={{ automaticallyAdjustKeyboardInsets: true }}
+      contentContainerStyle={{ paddingBottom: keyboardVisible ? 240 : 0 }}
       header={
         <Header
           title="Create Account"

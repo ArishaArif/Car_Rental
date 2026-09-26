@@ -269,7 +269,7 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
             textAlign="center"
             autoFocus
           />
-          {__DEV__ && fromScreen === 'Register' ? (
+          {fromScreen === 'Register' ? (
             <TouchableOpacity
               onPress={() => navigation.replace('Login', { role })}
               style={styles.devSkipButton}
