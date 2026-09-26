@@ -269,6 +269,16 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
             textAlign="center"
             autoFocus
           />
+          {__DEV__ && fromScreen === 'Register' ? (
+            <TouchableOpacity
+              onPress={() => navigation.replace('Login', { role })}
+              style={styles.devSkipButton}
+            >
+              <Text style={[styles.devSkipText, { color: colors.textMuted, fontSize: typography.fontSizes.xs }]}>
+                Skip Verification (Dev Only)
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Resend Code Section */}
@@ -353,6 +363,16 @@ const styles = StyleSheet.create({
     height: 58,
     borderWidth: 1.5,
     fontWeight: '700',
+  },
+  devSkipButton: {
+    marginTop: 12,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderStyle: 'dashed',
+    borderBottomColor: '#9CA3AF',
+  },
+  devSkipText: {
+    textDecorationLine: 'underline',
   },
   resendContainer: {
     alignItems: 'center',
