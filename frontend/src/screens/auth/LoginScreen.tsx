@@ -18,7 +18,7 @@ interface LoginScreenProps {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
-  const { role: contextRole, selectRole, login, isLoading, authError, clearError } = useAuth();
+  const { role: contextRole, selectRole, login, isLoading, clearError } = useAuth();
 
   const initialRole: UserRole = route.params?.role || contextRole || 'Customer';
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
@@ -26,7 +26,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (route.params?.role) {
@@ -39,7 +38,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
     setSelectedRole(newRole);
     await selectRole(newRole);
     clearError();
-    setSubmitError(null);
   };
 
   // Quick fill with demo account for the chosen role
@@ -49,7 +47,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
     setEmail(demo.email);
     setPassword(demo.pass);
     setErrors({});
-    setSubmitError(null);
   };
 
   const validate = (): boolean => {
@@ -74,7 +71,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
 
   const handleLogin = async () => {
     clearError();
-    setSubmitError(null);
 
     if (!validate()) {
       return;
@@ -84,13 +80,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
       await login(email.trim(), password, selectedRole);
       // RootNavigator will automatically transition to role dashboard upon user state change
     } catch (err: any) {
-      setSubmitError(err?.message || 'Invalid email or password.');
+      const message = err?.message || 'Invalid email or password.';
+      const field = /password/i.test(message) ? 'password' : 'email';
+      setErrors(previous => ({ ...previous, [field]: message }));
     }
   };
 
   return (
     <ScreenContainer
       scrollable
+      scrollViewProps={{ automaticallyAdjustKeyboardInsets: true }}
       header={
         <Header
           title="Sign In"
@@ -184,37 +183,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
           </View>
         </Card>
 
-        {/* Global Error Banner (e.g. Invalid Credentials) */}
-        {submitError || authError ? (
-          <View
-            style={[
-              styles.errorBanner,
-              {
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                borderColor: colors.danger,
-                borderRadius: borderRadius.md,
-                padding: spacing.sm + 2,
-                marginBottom: spacing.md,
-              },
-            ]}
-          >
-            <Text style={[styles.errorBannerIcon, { color: colors.danger }]}>⚠️</Text>
-            <Text
-              style={[
-                styles.errorBannerText,
-                {
-                  color: colors.danger,
-                  fontSize: typography.fontSizes.xs + 1,
-                  marginLeft: 8,
-                  flex: 1,
-                },
-              ]}
-            >
-              {submitError || authError}
-            </Text>
-          </View>
-        ) : null}
-
         {/* Form Inputs */}
         <View style={styles.form}>
           <Input
@@ -224,7 +192,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
             onChangeText={text => {
               setEmail(text);
               if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-              if (submitError) setSubmitError(null);
             }}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -240,7 +207,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
             onChangeText={text => {
               setPassword(text);
               if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-              if (submitError) setSubmitError(null);
             }}
             isPassword
             autoCapitalize="none"
@@ -347,17 +313,6 @@ const styles = StyleSheet.create({
   },
   roleTabText: {
     letterSpacing: 0.2,
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  errorBannerIcon: {
-    fontSize: 16,
-  },
-  errorBannerText: {
-    fontWeight: '500',
   },
   form: {
     width: '100%',

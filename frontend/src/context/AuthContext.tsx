@@ -7,6 +7,7 @@ export interface AuthContextType {
   role: UserRole;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitializing: boolean;
   authError: string | null;
   selectRole: (role: UserRole) => Promise<void>;
   login: (email: string, password: string, role?: UserRole) => Promise<AuthUser>;
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<UserRole>('Customer');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Initialize saved role and session
@@ -47,6 +49,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (err: any) {
         console.warn('Auth initialization warning:', err?.message);
       } finally {
+        setIsInitializing(false);
         setIsLoading(false);
       }
     };
@@ -191,6 +194,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role,
         isAuthenticated,
         isLoading,
+        isInitializing,
         authError,
         selectRole,
         login,

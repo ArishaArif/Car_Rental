@@ -35,7 +35,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
     confirmPassword?: string;
     terms?: string;
   }>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleRoleChange = async (newRole: UserRole) => {
     setSelectedRole(newRole);
@@ -61,6 +60,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
       errs.password = 'Password is required.';
     } else if (password.length < 6) {
       errs.password = 'Password must be at least 6 characters.';
+    } else if (!/[A-Z]/.test(password) || !/[!@#$%^&*(),.?":{}|<>_+\-=\[\]\\/`~;]/.test(password)) {
+      errs.password = 'Password must contain at least one uppercase letter and one special character.';
     }
 
     if (!confirmPassword) {
@@ -78,7 +79,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
   };
 
   const handleRegister = async () => {
-    setSubmitError(null);
     if (!validate()) {
       return;
     }
@@ -92,7 +92,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
         role: selectedRole,
       });
 
-      // Proceed to OTP verification with user contact info
       navigation.navigate('OtpVerification', {
         email: email.trim(),
         phone: phone.trim() || undefined,
@@ -100,13 +99,16 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
         fromScreen: 'Register',
       });
     } catch (err: any) {
-      setSubmitError(err?.message || 'Registration failed.');
+      const message = err?.message || 'Registration failed.';
+      const field = /password/i.test(message) ? 'password' : 'email';
+      setErrors(previous => ({ ...previous, [field]: message }));
     }
   };
 
   return (
     <ScreenContainer
       scrollable
+      scrollViewProps={{ automaticallyAdjustKeyboardInsets: true }}
       header={
         <Header
           title="Create Account"
@@ -189,23 +191,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
             })}
           </View>
         </Card>
-
-        {submitError ? (
-          <View
-            style={[
-              styles.errorBanner,
-              {
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                borderColor: colors.danger,
-                borderRadius: borderRadius.md,
-                padding: spacing.sm + 2,
-                marginBottom: spacing.md,
-              },
-            ]}
-          >
-            <Text style={{ color: colors.danger, fontWeight: '600' }}>⚠️ {submitError}</Text>
-          </View>
-        ) : null}
 
         {/* Registration Inputs */}
         <View style={styles.form}>
@@ -350,9 +335,6 @@ const styles = StyleSheet.create({
   },
   roleTabText: {
     letterSpacing: 0.2,
-  },
-  errorBanner: {
-    borderWidth: 1,
   },
   form: {
     width: '100%',

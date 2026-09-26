@@ -335,9 +335,9 @@ const AdminNavigator: React.FC = () => (
 
 export const RootNavigator: React.FC = () => {
   const { colors, isDark } = useTheme();
-  const { isAuthenticated, role, user, isLoading } = useAuth();
+  const { isAuthenticated, role, user, isInitializing } = useAuth();
 
-  if (isLoading) {
+  if (isInitializing) {
     return <Loading fullScreen message="Loading Velox Mobility..." />;
   }
 

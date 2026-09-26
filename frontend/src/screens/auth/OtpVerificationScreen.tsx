@@ -26,7 +26,7 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   const { verifyOtp, resendOtp, isLoading } = useAuth();
 
   const { email, phone, role, fromScreen } = route.params;
-
+console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen });
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -61,6 +61,8 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
 
       if (fromScreen === 'ForgotPassword') {
         navigation.replace('ResetPassword', { email });
+      } else if (fromScreen === 'Register') {
+        navigation.replace('Login', { role });
       } else {
         // Successful registration verification -> proceed to Profile Setup
         navigation.replace('ProfileSetup', { role });
