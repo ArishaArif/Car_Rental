@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err: any) {
       const msg = err?.message || 'Registration failed.';
       setAuthError(msg);
-      throw new Error(msg);
+      throw err;
     } finally {
       setIsLoading(false);
     }

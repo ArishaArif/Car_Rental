@@ -257,7 +257,7 @@ class AuthService {
       return { user: newUser, otpSent: true };
     } catch (apiError: any) {
       console.warn('[AuthService] Live API register error:', apiError?.message);
-      throw new Error(apiError?.message || 'Registration failed.');
+      throw apiError;
     }
   }
 
