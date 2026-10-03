@@ -86,6 +86,7 @@ export type AuthStackParamList = {
     phone?: string;
     role: UserRole;
     fromScreen?: 'Register' | 'ForgotPassword';
+    otpCode?: string;
   };
   ForgotPassword: { role?: UserRole } | undefined;
   ResetPassword: { email: string };

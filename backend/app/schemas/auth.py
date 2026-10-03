@@ -40,6 +40,7 @@ class RegisterRequest(BaseModel):
 class RegisterResponse(BaseModel):
     message: str
     email: EmailStr
+    otp_code: Optional[str] = None
 
 
 # ── OTP ───────────────────────────────────────────────────────────────────────

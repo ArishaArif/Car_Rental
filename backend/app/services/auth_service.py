@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 
 
 from app.models.user import User, AuthProvider, UserRole
@@ -27,8 +27,10 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
     3. Create user (unverified)
     4. Generate + send OTP
     """
+    clean_email = data.email.strip().lower()
+
     # Check duplicate
-    result = await db.execute(select(User).where(User.email == data.email))
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     existing = result.scalar_one_or_none()
     if existing:
         if existing.is_email_verified:
@@ -40,12 +42,16 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
             # Resend OTP to unverified user
             otp_code = await create_otp(db, str(existing.id), OTPPurpose.EMAIL_VERIFICATION)
             await send_otp_email(existing.email, existing.full_name, otp_code, "email_verification")
-            return {"message": "Account exists but email not verified. A new OTP has been sent.", "email": data.email}
+            return {
+                "message": "Account exists but email not verified. A new OTP has been sent.",
+                "email": clean_email,
+                "otp_code": otp_code,
+            }
 
     # Create user
     user = User(
         full_name=data.full_name,
-        email=data.email,
+        email=clean_email,
         hashed_password=hash_password(data.password),
         auth_provider=AuthProvider.EMAIL,
         role=data.role or UserRole.CUSTOMER,
@@ -61,14 +67,16 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> dict:
 
     return {
         "message": "Registration successful. Please check your email for the verification code.",
-        "email": data.email,
+        "email": clean_email,
+        "otp_code": otp_code,
     }
 
 
 # ── Verify OTP ────────────────────────────────────────────────────────────────
 async def verify_email_otp(db: AsyncSession, email: str, code: str) -> dict:
     """Verify OTP and mark user as email-verified."""
-    result = await db.execute(select(User).where(User.email == email))
+    clean_email = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -92,7 +100,8 @@ async def verify_email_otp(db: AsyncSession, email: str, code: str) -> dict:
 # ── Resend OTP ────────────────────────────────────────────────────────────────
 async def resend_otp_code(db: AsyncSession, email: str, purpose: str) -> dict:
     """Resend OTP code to user's email."""
-    result = await db.execute(select(User).where(User.email == email))
+    clean_email = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -109,7 +118,8 @@ async def resend_otp_code(db: AsyncSession, email: str, purpose: str) -> dict:
 # ── Login ─────────────────────────────────────────────────────────────────────
 async def login_user(db: AsyncSession, data: LoginRequest) -> TokenResponse:
     """Authenticate email/password and return token pair."""
-    result = await db.execute(select(User).where(User.email == data.email))
+    clean_email = data.email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     # Generic error to prevent email enumeration
@@ -216,11 +226,12 @@ async def google_auth(db: AsyncSession, id_token_str: str) -> TokenResponse:
     Verify Google ID token, create or update user, return JWT tokens.
     """
     google_user = verify_google_token(id_token_str)
+    google_email = google_user.email.strip().lower()
 
     # Try to find user by Google ID or email
     result = await db.execute(
         select(User).where(
-            (User.google_id == google_user.google_id) | (User.email == google_user.email)
+            (User.google_id == google_user.google_id) | (func.lower(User.email) == google_email)
         )
     )
     user = result.scalar_one_or_none()
@@ -229,7 +240,7 @@ async def google_auth(db: AsyncSession, id_token_str: str) -> TokenResponse:
         # Create new Google user (auto-verified)
         user = User(
             full_name=google_user.full_name,
-            email=google_user.email,
+            email=google_email,
             auth_provider=AuthProvider.GOOGLE,
             google_id=google_user.google_id,
             profile_picture=google_user.picture,
@@ -265,7 +276,8 @@ async def google_auth(db: AsyncSession, id_token_str: str) -> TokenResponse:
 # ── Forgot Password ───────────────────────────────────────────────────────────
 async def forgot_password(db: AsyncSession, email: str) -> dict:
     """Send a password reset OTP."""
-    result = await db.execute(select(User).where(User.email == email))
+    clean_email = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     # Don't reveal if user exists
@@ -279,7 +291,8 @@ async def forgot_password(db: AsyncSession, email: str) -> dict:
 # ── Reset Password ────────────────────────────────────────────────────────────
 async def reset_password(db: AsyncSession, email: str, code: str, new_password: str) -> dict:
     """Verify reset OTP and update password."""
-    result = await db.execute(select(User).where(User.email == email))
+    clean_email = email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     if not user:

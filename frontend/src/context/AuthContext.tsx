@@ -11,7 +11,7 @@ export interface AuthContextType {
   authError: string | null;
   selectRole: (role: UserRole) => Promise<void>;
   login: (email: string, password: string, role?: UserRole) => Promise<AuthUser>;
-  register: (payload: RegisterPayload) => Promise<{ user: AuthUser; otpSent: boolean }>;
+  register: (payload: RegisterPayload) => Promise<{ user: AuthUser; otpSent: boolean; otpCode?: string }>;
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   resendOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;

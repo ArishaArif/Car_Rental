@@ -8,6 +8,8 @@ interface AuthStorage {
   token: string | null;
   refreshToken: string | null;
   otpStore: Record<string, string>; // fallback email -> OTP
+  verifiedEmails: Record<string, boolean>; // TEMPORARY WORKAROUND
+  registeredUsers: Record<string, { user: AuthUser; pass?: string }>;
 }
 
 // In-memory persistent session
@@ -17,6 +19,8 @@ const authStorage: AuthStorage = {
   token: null,
   refreshToken: null,
   otpStore: {},
+  verifiedEmails: {},
+  registeredUsers: {},
 };
 
 // Default seed demo accounts for quick testing & offline resilience
@@ -88,6 +92,20 @@ export interface RegisterPayload {
 }
 
 class AuthService {
+  // TEMPORARY WORKAROUND: Backend is not persisting email verification status correctly. Remove this workaround once backend is fixed to properly update is_email_verified in the database after OTP verification.
+  private frontendVerifiedEmails: Set<string> = new Set();
+
+  public markEmailAsVerified(email: string): void {
+    const clean = email.trim().toLowerCase();
+    this.frontendVerifiedEmails.add(clean);
+    authStorage.verifiedEmails[clean] = true;
+  }
+
+  public isEmailFrontendVerified(email: string): boolean {
+    const clean = email.trim().toLowerCase();
+    return this.frontendVerifiedEmails.has(clean) || !!authStorage.verifiedEmails[clean];
+  }
+
   /**
    * Get previously selected role
    */
@@ -224,22 +242,23 @@ class AuthService {
         }
       }
 
-      // Throw exact backend error message to screen (e.g. "Invalid email or password")
-      throw new Error(apiError?.message || 'Invalid email or password. Please try again.');
+      // Throw exact backend error message to screen (e.g. "Invalid email or password", "Email not verified...")
+      throw apiError;
     }
   }
 
   /**
    * Live Registration via backend REST API
    */
-  public async register(payload: RegisterPayload): Promise<{ user: AuthUser; otpSent: boolean }> {
+  public async register(payload: RegisterPayload): Promise<{ user: AuthUser; otpSent: boolean; otpCode?: string }> {
     const cleanEmail = payload.email.trim().toLowerCase();
+    const cleanPass = payload.password.trim();
 
     try {
-      await apiClient.post<any>('/auth/register', {
+      const res = await apiClient.post<any>('/auth/register', {
         full_name: payload.name.trim(),
         email: cleanEmail,
-        password: payload.password,
+        password: cleanPass,
         role: payload.role,
         phone_number: payload.phone?.trim() || null,
       });
@@ -253,8 +272,13 @@ class AuthService {
         isProfileComplete: false,
       };
 
+      authStorage.registeredUsers[cleanEmail] = {
+        user: newUser,
+        pass: cleanPass,
+      };
+
       authStorage.selectedRole = payload.role;
-      return { user: newUser, otpSent: true };
+      return { user: newUser, otpSent: true, otpCode: res.data?.otp_code };
     } catch (apiError: any) {
       console.warn('[AuthService] Live API register error:', apiError?.message);
       throw apiError;
@@ -274,13 +298,24 @@ class AuthService {
         otp_code: cleanCode,
         purpose: 'email_verification',
       });
+
+      this.markEmailAsVerified(cleanEmail);
+
+      // Check if backend returns a usable token directly in verify-otp response
+      const token = res?.data?.access_token || res?.data?.token;
+      if (token) {
+        apiClient.setAuthToken(token);
+        authStorage.token = token;
+        const rToken = res?.data?.refresh_token;
+        if (rToken) {
+          apiClient.setRefreshToken(rToken);
+          authStorage.refreshToken = rToken;
+        }
+      }
+
       return res.success || res.status === 200;
     } catch (apiError: any) {
-      // Allow demo code 123456 fallback for testing convenience
-      if (cleanCode === '123456') {
-        return true;
-      }
-      throw new Error(apiError?.message || 'Invalid verification code.');
+      throw apiError;
     }
   }
 

@@ -275,11 +275,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
     }
 
     try {
-      await register({
+      const regRes = await register({
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-        password,
+        password: password.trim(),
         role: selectedRole,
       });
 
@@ -288,6 +288,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
         phone: phone.trim() || undefined,
         role: selectedRole,
         fromScreen: 'Register',
+        otpCode: regRes?.otpCode,
       });
     } catch (err: any) {
       const fieldErrors = mapBackendErrors(err);

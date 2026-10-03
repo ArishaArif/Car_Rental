@@ -25,8 +25,7 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   const { colors, typography, spacing, borderRadius } = useTheme();
   const { verifyOtp, resendOtp, isLoading } = useAuth();
 
-  const { email, phone, role, fromScreen } = route.params;
-console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen });
+  const { email, phone, role, fromScreen, otpCode } = route.params;
   const [otp, setOtp] = useState('');
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -68,7 +67,7 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
         navigation.replace('ProfileSetup', { role });
       }
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Invalid verification code. Use demo code 123456.');
+      setErrorMsg(err?.message || 'Invalid verification code.');
     }
   };
 
@@ -169,7 +168,7 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
           ) : null}
         </Card>
 
-        {/* Demo Hint Banner */}
+        {/* Verification Code Banner */}
         <View
           style={[
             styles.hintBanner,
@@ -182,10 +181,10 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
           ]}
         >
           <Text style={[styles.hintText, { color: colors.textSecondary, fontSize: typography.fontSizes.xs }]}>
-            💡 Prototype Testing Code:{' '}
-            <Text style={{ color: colors.primary, fontWeight: '700' }}>123456</Text>
+            💡 Verification Code:{' '}
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>{otpCode || '123456'}</Text>
           </Text>
-          <TouchableOpacity onPress={() => setOtp('123456')} style={styles.fillCodeBtn}>
+          <TouchableOpacity onPress={() => setOtp(otpCode || '123456')} style={styles.fillCodeBtn}>
             <Text style={{ color: colors.primary, fontSize: typography.fontSizes.xs, fontWeight: '700' }}>
               Quick Fill
             </Text>
@@ -269,16 +268,6 @@ console.log('OtpVerificationScreen params:', { email, phone, role, fromScreen })
             textAlign="center"
             autoFocus
           />
-          {fromScreen === 'Register' ? (
-            <TouchableOpacity
-              onPress={() => navigation.replace('Login', { role })}
-              style={styles.devSkipButton}
-            >
-              <Text style={[styles.devSkipText, { color: colors.textMuted, fontSize: typography.fontSizes.xs }]}>
-                Skip Verification (Dev Only)
-              </Text>
-            </TouchableOpacity>
-          ) : null}
         </View>
 
         {/* Resend Code Section */}
