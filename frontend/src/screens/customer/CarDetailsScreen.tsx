@@ -12,7 +12,7 @@ import { CustomerStackParamList, Vehicle } from '../../types';
 import { useTheme } from '../../theme';
 import { useFavorites } from '../../context/FavoritesContext';
 import { vehicleService } from '../../services/vehicleService';
-import { ScreenContainer, Header, Card, Button, Loading, EmptyState } from '../../components/common';
+import { ScreenContainer, Header, Card, Button, Loading, EmptyState, FloatingAIAssistantButton } from '../../components/common';
 
 type CarDetailsScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -151,6 +151,13 @@ export const CarDetailsScreen: React.FC<CarDetailsScreenProps> = ({
             style={{ flex: 1, marginLeft: 16 }}
           />
         </View>
+      }
+      floatingAction={
+        <FloatingAIAssistantButton
+          onPress={() => navigation.navigate('AIAssistant')}
+          bottom={96}
+          right={20}
+        />
       }
     >
       {/* Hero Large Vehicle Image */}

@@ -14,7 +14,7 @@ import { useFavorites } from '../../context/FavoritesContext';
 import { useBooking } from '../../context/BookingContext';
 import { vehicleService, CategorySummary } from '../../services/vehicleService';
 import { notificationService } from '../../services/notificationService';
-import { ScreenContainer, Card, CarCard, Loading } from '../../components/common';
+import { ScreenContainer, Card, CarCard, Loading, FloatingAIAssistantButton } from '../../components/common';
 
 type CustomerHomeScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -69,7 +69,16 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
   }
 
   return (
-    <ScreenContainer scrollable>
+    <ScreenContainer
+      scrollable
+      floatingAction={
+        <FloatingAIAssistantButton
+          onPress={() => navigation.navigate('AIAssistant')}
+          bottom={24}
+          right={20}
+        />
+      }
+    >
       {/* Custom Header Bar */}
       <View
         style={[

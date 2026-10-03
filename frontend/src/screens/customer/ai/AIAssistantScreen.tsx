@@ -52,13 +52,36 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
   const initialQueryExecuted = useRef(false);
 
   const scrollToBottom = useCallback((animated: boolean = true) => {
-    requestAnimationFrame(() => {
-      flatListRef.current?.scrollToEnd({ animated });
-    });
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated });
-    }, 100);
+    if (!flatListRef.current) return;
+    try {
+      flatListRef.current.scrollToEnd({ animated });
+    } catch {
+      // safe fallback
+    }
   }, []);
+
+  // Automatically scroll to bottom whenever messages or processing state updates
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    // 1. Immediate scroll
+    scrollToBottom(true);
+
+    // 2. Short delay for text message bubble layout
+    const t1 = setTimeout(() => scrollToBottom(true), 80);
+
+    // 3. Medium delay for recommendation cards and horizontal carousel layout
+    const t2 = setTimeout(() => scrollToBottom(true), 200);
+
+    // 4. Extended delay for card image dimensions & nested components to settle
+    const t3 = setTimeout(() => scrollToBottom(true), 450);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [messages, isProcessing, scrollToBottom]);
 
   // Monitor keyboard appearance to automatically keep latest messages in view
   useEffect(() => {
@@ -68,6 +91,7 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
     const showSub = Keyboard.addListener(showEvent, () => {
       setIsKeyboardVisible(true);
       scrollToBottom(true);
+      setTimeout(() => scrollToBottom(true), 120);
     });
     const hideSub = Keyboard.addListener(hideEvent, () => {
       setIsKeyboardVisible(false);
@@ -200,7 +224,8 @@ export const AIAssistantScreen: React.FC<AIAssistantScreenProps> = ({
         ref={flatListRef}
         data={messages}
         keyExtractor={item => item.id}
-        contentContainerStyle={[styles.listContent, { paddingBottom: 16 }]}
+        extraData={messages.length + (isProcessing ? 1 : 0)}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 24 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         onContentSizeChange={() => scrollToBottom(true)}

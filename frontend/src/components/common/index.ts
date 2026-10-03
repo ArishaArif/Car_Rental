@@ -6,4 +6,5 @@ export * from './Header';
 export * from './Loading';
 export * from './EmptyState';
 export * from './ErrorState';
+export * from './FloatingAIAssistantButton';
 export * from '../cars/CarCard';

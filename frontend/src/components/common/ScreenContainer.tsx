@@ -22,9 +22,11 @@ export interface ScreenContainerProps {
   onRetry?: () => void;
   header?: React.ReactNode;
   footer?: React.ReactNode;
+  floatingAction?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   scrollViewProps?: ScrollViewProps;
+  scrollViewRef?: React.Ref<React.ElementRef<typeof ScrollView>>;
 }
 
 export const ScreenContainer: React.FC<ScreenContainerProps> = ({
@@ -36,9 +38,11 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
   onRetry,
   header,
   footer,
+  floatingAction,
   style,
   contentContainerStyle,
   scrollViewProps,
+  scrollViewRef,
 }) => {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -72,6 +76,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
         />
       ) : scrollable ? (
         <ScrollView
+          ref={scrollViewRef}
           style={styles.flex}
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           keyboardShouldPersistTaps="handled"
@@ -85,6 +90,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
       )}
 
       {footer}
+      {floatingAction}
     </View>
   );
 };

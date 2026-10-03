@@ -11,7 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CustomerStackParamList, FilterOptions, SortOption, Vehicle, VehicleCategory } from '../../types';
 import { useTheme } from '../../theme';
 import { vehicleService } from '../../services/vehicleService';
-import { ScreenContainer, Header, Input, CarCard, EmptyState } from '../../components/common';
+import { ScreenContainer, Header, Input, CarCard, EmptyState, FloatingAIAssistantButton } from '../../components/common';
 
 type SearchCarsScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -59,6 +59,13 @@ export const SearchCarsScreen: React.FC<SearchCarsScreenProps> = ({ navigation, 
   return (
     <ScreenContainer
       scrollable
+      floatingAction={
+        <FloatingAIAssistantButton
+          onPress={() => navigation.navigate('AIAssistant')}
+          bottom={24}
+          right={20}
+        />
+      }
       header={
         <Header
           title="Search Fleet"

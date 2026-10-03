@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Keyboard, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Keyboard, View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList, UserRole } from '../../types';
@@ -183,18 +183,44 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+  const isConfirmPasswordFocusedRef = useRef(false);
 
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
-    const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, e => {
+      setKeyboardVisible(true);
+      const h = e.endCoordinates?.height || 320;
+      setKeyboardHeight(h);
+      if (isConfirmPasswordFocusedRef.current) {
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 80);
+      }
+    });
+
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardVisible(false);
+    });
 
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
     };
   }, []);
+
+  const handleConfirmPasswordFocus = () => {
+    isConfirmPasswordFocusedRef.current = true;
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 120);
+  };
 
   const handleRoleChange = async (newRole: UserRole) => {
     setSelectedRole(newRole);
@@ -272,8 +298,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
   return (
     <ScreenContainer
       scrollable
-      scrollViewProps={{ automaticallyAdjustKeyboardInsets: true }}
-      contentContainerStyle={{ paddingBottom: keyboardVisible ? 240 : 0 }}
+      scrollViewRef={scrollViewRef}
+      scrollViewProps={{ automaticallyAdjustKeyboardInsets: true, keyboardShouldPersistTaps: 'handled' }}
+      contentContainerStyle={{ paddingBottom: keyboardVisible ? Math.max(keyboardHeight + 80, 340) : 30 }}
       header={
         <Header
           title="Create Account"
@@ -437,6 +464,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
             onChangeText={text => {
               setConfirmPassword(text);
               if (errors.confirmPassword || errors.general) setErrors(prev => ({ ...prev, confirmPassword: undefined, general: undefined }));
+            }}
+            onFocus={handleConfirmPasswordFocus}
+            onBlur={() => {
+              isConfirmPasswordFocusedRef.current = false;
             }}
             isPassword
             autoCapitalize="none"

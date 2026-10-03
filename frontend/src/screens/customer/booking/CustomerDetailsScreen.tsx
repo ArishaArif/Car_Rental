@@ -30,7 +30,15 @@ interface ValidationErrors {
   phone?: string;
   email?: string;
   licenseNumber?: string;
+  cnic?: string;
 }
+
+const formatCNIC = (raw: string): string => {
+  const digits = raw.replace(/\D/g, '').slice(0, 13);
+  if (digits.length <= 5) return digits;
+  if (digits.length <= 12) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
+};
 
 export const CustomerDetailsScreen: React.FC<CustomerDetailsProps> = ({
   navigation,
@@ -53,6 +61,9 @@ export const CustomerDetailsScreen: React.FC<CustomerDetailsProps> = ({
   );
   const [licenseNumber, setLicenseNumber] = useState<string>(
     draft?.customer?.licenseNumber || user?.licenseNumber || 'PK-LHR-2022-9841'
+  );
+  const [cnic, setCnic] = useState<string>(
+    draft?.customer?.cnic || ''
   );
   const [notes, setNotes] = useState<string>(draft?.customer?.notes || '');
 
@@ -78,6 +89,13 @@ export const CustomerDetailsScreen: React.FC<CustomerDetailsProps> = ({
       errs.licenseNumber = 'Please enter a valid driving license ID number';
     }
 
+    const cnicDigits = cnic.replace(/\D/g, '');
+    if (!cnic.trim()) {
+      errs.cnic = 'Please enter your CNIC number';
+    } else if (cnicDigits.length !== 13) {
+      errs.cnic = 'CNIC must be 13 digits (format: XXXXX-XXXXXXX-X)';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -92,6 +110,7 @@ export const CustomerDetailsScreen: React.FC<CustomerDetailsProps> = ({
       phone: phone.trim(),
       email: email.trim(),
       licenseNumber: licenseNumber.trim(),
+      cnic: cnic.trim(),
       notes: notes.trim(),
     };
 
@@ -218,6 +237,21 @@ export const CustomerDetailsScreen: React.FC<CustomerDetailsProps> = ({
           error={errors.licenseNumber}
           autoCapitalize="characters"
           leftIcon={<Text style={{ fontSize: 16 }}>🪪</Text>}
+        />
+
+        <Input
+          label="CNIC (National ID) *"
+          placeholder="e.g. 35201-1234567-1"
+          value={cnic}
+          onChangeText={val => {
+            const formatted = formatCNIC(val);
+            setCnic(formatted);
+            if (errors.cnic) setErrors(prev => ({ ...prev, cnic: undefined }));
+          }}
+          error={errors.cnic}
+          keyboardType="number-pad"
+          maxLength={15}
+          leftIcon={<Text style={{ fontSize: 16 }}>🆔</Text>}
         />
 
         <Input

@@ -206,6 +206,7 @@ export interface BookingCustomerDetails {
   phone: string;
   email: string;
   licenseNumber: string;
+  cnic?: string;
   notes?: string;
 }
 
