@@ -155,7 +155,7 @@ export const CarDetailsScreen: React.FC<CarDetailsScreenProps> = ({
       floatingAction={
         <FloatingAIAssistantButton
           onPress={() => navigation.navigate('AIAssistant')}
-          bottom={96}
+          bottom={120}
           right={20}
         />
       }

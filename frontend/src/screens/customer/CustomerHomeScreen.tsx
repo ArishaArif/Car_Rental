@@ -73,7 +73,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
       floatingAction={
         <FloatingAIAssistantButton
           onPress={() => navigation.navigate('AIAssistant')}
-          bottom={24}
+          bottom={110}
           right={20}
         />
       }

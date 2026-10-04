@@ -90,7 +90,11 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
       )}
 
       {footer}
-      {floatingAction}
+      {floatingAction ? (
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          {floatingAction}
+        </View>
+      ) : null}
     </View>
   );
 };
