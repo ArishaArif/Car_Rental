@@ -201,7 +201,7 @@ export const CarDetailsScreen: React.FC<CarDetailsScreenProps> = ({
         </View>
       </View>
 
-      <View style={[styles.content, { padding: spacing.md }]}>
+      <View style={{ padding: spacing.md, paddingBottom: 184 }}>
         {/* Title, Brand, Rating Row */}
         <View style={styles.mainTitleRow}>
           <View style={{ flex: 1 }}>
@@ -429,9 +429,6 @@ const styles = StyleSheet.create({
   floatingStatusText: {
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  content: {
-    paddingBottom: 28,
   },
   mainTitleRow: {
     flexDirection: 'row',

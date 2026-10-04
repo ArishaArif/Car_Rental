@@ -90,7 +90,7 @@ export const SearchCarsScreen: React.FC<SearchCarsScreenProps> = ({ navigation, 
         />
       }
     >
-      <View style={[styles.content, { padding: spacing.md }]}>
+      <View style={{ padding: spacing.md, paddingBottom: 120 }}>
         {/* Search Input */}
         <Input
           placeholder="Search Corolla, Civic, Sportage, SUV, Terminal..."
@@ -202,9 +202,6 @@ export const SearchCarsScreen: React.FC<SearchCarsScreenProps> = ({ navigation, 
 };
 
 const styles = StyleSheet.create({
-  content: {
-    paddingBottom: 24,
-  },
   filterBtn: {
     width: 38,
     height: 38,

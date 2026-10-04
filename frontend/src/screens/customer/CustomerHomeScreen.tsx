@@ -14,7 +14,7 @@ import { useFavorites } from '../../context/FavoritesContext';
 import { useBooking } from '../../context/BookingContext';
 import { vehicleService, CategorySummary } from '../../services/vehicleService';
 import { notificationService } from '../../services/notificationService';
-import { ScreenContainer, Card, CarCard, Loading, FloatingAIAssistantButton } from '../../components/common';
+import { ScreenContainer, Card, CarCard, Loading, FloatingAIAssistantButton, AppIcon } from '../../components/common';
 
 type CustomerHomeScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -61,7 +61,6 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
     return unsubscribe;
   }, []);
 
-  const featuredCars = vehicles.slice(0, 4);
   const topRatedCars = [...vehicles].sort((a, b) => b.rating - a.rating).slice(0, 4);
 
   if (loading) {
@@ -235,19 +234,27 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             style={[
               styles.iconBtn,
               {
-                backgroundColor: colors.surfaceVariant,
-                borderColor: colors.border,
-                borderRadius: borderRadius.md,
+                borderColor: colors.danger + '40',
+                backgroundColor: colors.danger + '14',
+                borderRadius: borderRadius.full,
               },
             ]}
             accessibilityLabel="Sign out"
           >
-            <Text style={{ fontSize: 15 }}>🚪</Text>
+            <AppIcon name="log-out-outline" color={colors.danger} size={20} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={[styles.content, { paddingHorizontal: spacing.md, paddingVertical: spacing.md }]}>
+      <View
+        style={[
+          {
+            paddingHorizontal: spacing.md,
+            paddingTop: spacing.md,
+            paddingBottom: 120,
+          },
+        ]}
+      >
         {/* Active Rental In Progress Live Banner */}
         {activeRental ? (
           <TouchableOpacity
@@ -547,49 +554,7 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           ))}
         </View>
 
-        {/* Featured Vehicles (Horizontal Carousel) */}
-        <View style={styles.sectionHeader}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              {
-                color: colors.textPrimary,
-                fontSize: typography.fontSizes.lg,
-                fontWeight: typography.fontWeights.bold,
-              },
-            ]}
-          >
-            Featured Vehicles
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('VehicleGallery')}>
-            <Text
-              style={[
-                styles.sectionLink,
-                { color: colors.primary, fontSize: typography.fontSizes.xs + 1, fontWeight: '700' },
-              ]}
-            >
-              SEE MORE →
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}
-          style={{ marginHorizontal: -spacing.md, marginBottom: spacing.md }}
-        >
-          {featuredCars.map(car => (
-            <CarCard
-              key={car.id}
-              vehicle={car}
-              horizontal
-              onPress={() => navigation.navigate('CarDetails', { vehicleId: car.id })}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Top Rated Vehicles (Vertical List) */}
+        {/* Top-rated vehicles are shown once, in descending rating order. */}
         <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
           <Text
             style={[
@@ -615,15 +580,21 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
           </TouchableOpacity>
         </View>
 
-        <View style={{ marginTop: spacing.sm }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.xs }}
+          style={{ marginHorizontal: -spacing.md, marginBottom: spacing.md }}
+        >
           {topRatedCars.map(car => (
             <CarCard
               key={car.id}
               vehicle={car}
+              horizontal
               onPress={() => navigation.navigate('CarDetails', { vehicleId: car.id })}
             />
           ))}
-        </View>
+        </ScrollView>
       </View>
     </ScreenContainer>
   );
@@ -688,9 +659,6 @@ const styles = StyleSheet.create({
   badgeCountText: {
     fontSize: 9,
     fontWeight: '800',
-  },
-  content: {
-    paddingBottom: 36,
   },
   heroCard: {
     borderWidth: 1,

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { Keyboard, View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList, UserRole } from '../../types';
@@ -82,6 +82,12 @@ const mapMessageToField = (msg: string): keyof FormErrors | null => {
 
   return null;
 };
+
+const COUNTRY_CODES = [
+  { code: '+92', country: 'Pakistan' },
+  { code: '+1', country: 'United States / Canada' },
+  { code: '+44', country: 'United Kingdom' },
+];
 
 const mapBackendErrors = (err: any): FormErrors => {
   const result: FormErrors = {};
@@ -179,6 +185,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+92');
+  const [countryCodePickerVisible, setCountryCodePickerVisible] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(true);
@@ -274,18 +282,20 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
       return;
     }
 
+    const fullPhone = phone.trim() ? `${countryCode} ${phone.trim()}` : undefined;
+
     try {
       const regRes = await register({
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined,
+        phone: fullPhone,
         password: password.trim(),
         role: selectedRole,
       });
 
       navigation.navigate('OtpVerification', {
         email: email.trim(),
-        phone: phone.trim() || undefined,
+        phone: fullPhone,
         role: selectedRole,
         fromScreen: 'Register',
         otpCode: regRes?.otpCode,
@@ -433,7 +443,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
 
           <Input
             label="Phone Number (Optional)"
-            placeholder="e.g. +1 (555) 019-2834"
+            placeholder="e.g. 300 1234567"
             value={phone}
             onChangeText={text => {
               setPhone(text);
@@ -441,7 +451,19 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
             }}
             keyboardType="phone-pad"
             error={errors.phone}
-            leftIcon={<Text style={{ color: colors.textMuted }}>📱</Text>}
+            leftIcon={
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => setCountryCodePickerVisible(true)}
+                style={styles.countryCodeSelector}
+                accessibilityRole="button"
+                accessibilityLabel={`Country code ${countryCode}`}
+              >
+                <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>{countryCode}</Text>
+                <Text style={{ color: colors.textMuted, marginLeft: 3 }}>⌄</Text>
+                <View style={[styles.countryCodeDivider, { backgroundColor: colors.border }]} />
+              </TouchableOpacity>
+            }
           />
 
           <Input
@@ -521,6 +543,45 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation, rout
           />
         </View>
       </View>
+      <Modal
+        visible={countryCodePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCountryCodePickerVisible(false)}
+      >
+        <View style={styles.countryCodeModal}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setCountryCodePickerVisible(false)}
+            style={StyleSheet.absoluteFill}
+            accessibilityLabel="Close country code selector"
+          />
+          <View
+            style={[
+              styles.countryCodeMenu,
+              { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: borderRadius.md },
+            ]}
+          >
+            {COUNTRY_CODES.map(option => (
+              <TouchableOpacity
+                key={option.code}
+                onPress={() => {
+                  setCountryCode(option.code);
+                  setCountryCodePickerVisible(false);
+                }}
+                style={[styles.countryCodeOption, { borderBottomColor: colors.border }]}
+              >
+                <Text style={{ color: colors.textPrimary, fontSize: typography.fontSizes.md }}>
+                  {option.country}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: typography.fontSizes.md }}>
+                  {option.code}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 };
@@ -552,6 +613,34 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
+  },
+  countryCodeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 10,
+  },
+  countryCodeDivider: {
+    position: 'absolute',
+    right: 0,
+    width: 1,
+    height: 24,
+  },
+  countryCodeModal: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  countryCodeMenu: {
+    borderWidth: 1,
+    paddingHorizontal: 16,
+  },
+  countryCodeOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   generalErrorBanner: {
     borderWidth: 1,

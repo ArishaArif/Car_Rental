@@ -7,4 +7,5 @@ export * from './Loading';
 export * from './EmptyState';
 export * from './ErrorState';
 export * from './FloatingAIAssistantButton';
+export * from './AppIcon';
 export * from '../cars/CarCard';

@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, Text, ViewStyle } from 'react-native';
+import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { useTheme } from '../../theme';
+import { AppIcon } from './AppIcon';
 
 export interface FloatingAIAssistantButtonProps {
   onPress: () => void;
@@ -28,13 +29,14 @@ export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps>
           bottom,
           right,
           shadowColor: colors.primary,
+          borderColor: colors.surface,
         },
         style,
       ]}
       accessibilityLabel="AI Assistant"
       accessibilityRole="button"
     >
-      <Text style={styles.icon}>🤖</Text>
+      <AppIcon name="chatbubble-ellipses" color="#FFFFFF" size={26} />
     </TouchableOpacity>
   );
 };
@@ -45,15 +47,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
+    elevation: 10,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     zIndex: 999,
-  },
-  icon: {
-    fontSize: 28,
   },
 });
