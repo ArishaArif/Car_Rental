@@ -12,7 +12,6 @@ export interface FloatingAIAssistantButtonProps {
 
 export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps> = ({
   onPress,
-  bottom = 24,
   right = 20,
   style,
 }) => {
@@ -26,7 +25,8 @@ export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps>
         styles.button,
         {
           backgroundColor: colors.primary,
-          bottom,
+           top: '50%',
+          marginTop: -28,
           right,
           shadowColor: colors.primary,
           borderColor: colors.surface,
