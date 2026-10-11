@@ -12,7 +12,7 @@ import { CustomerStackParamList, Vehicle } from '../../types';
 import { useTheme } from '../../theme';
 import { useFavorites } from '../../context/FavoritesContext';
 import { vehicleService } from '../../services/vehicleService';
-import { ScreenContainer, Header, Card, Button, Loading, EmptyState, FloatingAIAssistantButton } from '../../components/common';
+import { ScreenContainer, Header, Card, Button, EmptyState, FloatingAIAssistantButton } from '../../components/common';
 
 type CarDetailsScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -49,12 +49,29 @@ export const CarDetailsScreen: React.FC<CarDetailsScreenProps> = ({
   }, [vehicleId]);
 
   if (loading) {
-    return <Loading fullScreen message="Loading vehicle specifications..." />;
+    return (
+      <ScreenContainer
+        loading
+        loadingMessage="Loading vehicle specifications..."
+        floatingAction={
+          <FloatingAIAssistantButton
+            onPress={() => navigation.navigate('AIAssistant')}
+            right={20}
+          />
+        }
+      />
+    );
   }
 
   if (!vehicle) {
     return (
       <ScreenContainer
+        floatingAction={
+          <FloatingAIAssistantButton
+            onPress={() => navigation.navigate('AIAssistant')}
+            right={20}
+          />
+        }
         header={
           <Header
             title="Vehicle Not Found"
@@ -155,7 +172,6 @@ export const CarDetailsScreen: React.FC<CarDetailsScreenProps> = ({
       floatingAction={
         <FloatingAIAssistantButton
           onPress={() => navigation.navigate('AIAssistant')}
-          bottom={120}
           right={20}
         />
       }

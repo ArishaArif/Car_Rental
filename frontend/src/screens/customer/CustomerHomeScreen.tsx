@@ -14,7 +14,7 @@ import { useFavorites } from '../../context/FavoritesContext';
 import { useBooking } from '../../context/BookingContext';
 import { vehicleService, CategorySummary } from '../../services/vehicleService';
 import { notificationService } from '../../services/notificationService';
-import { ScreenContainer, Card, CarCard, Loading, FloatingAIAssistantButton, AppIcon } from '../../components/common';
+import { ScreenContainer, Card, CarCard, FloatingAIAssistantButton, AppIcon } from '../../components/common';
 
 type CustomerHomeScreenNavigationProp = NativeStackNavigationProp<
   CustomerStackParamList,
@@ -63,17 +63,14 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
 
   const topRatedCars = [...vehicles].sort((a, b) => b.rating - a.rating).slice(0, 4);
 
-  if (loading) {
-    return <Loading fullScreen message="Loading curated fleet..." />;
-  }
-
   return (
     <ScreenContainer
       scrollable
+      loading={loading}
+      loadingMessage="Loading curated fleet..."
       floatingAction={
         <FloatingAIAssistantButton
           onPress={() => navigation.navigate('AIAssistant')}
-          bottom={110}
           right={20}
         />
       }
@@ -595,6 +592,33 @@ export const CustomerHomeScreen: React.FC<CustomerHomeScreenProps> = ({ navigati
             />
           ))}
         </ScrollView>
+
+        <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              {
+                color: colors.textPrimary,
+                fontSize: typography.fontSizes.lg,
+                fontWeight: typography.fontWeights.bold,
+              },
+            ]}
+          >
+            All Available Cars
+          </Text>
+        </View>
+
+        <View style={{ marginTop: spacing.sm }}>
+          {vehicles
+            .filter(car => car.availability === 'Available')
+            .map(car => (
+              <CarCard
+                key={car.id}
+                vehicle={car}
+                onPress={() => navigation.navigate('CarDetails', { vehicleId: car.id })}
+              />
+            ))}
+        </View>
       </View>
     </ScreenContainer>
   );
@@ -702,7 +726,7 @@ const styles = StyleSheet.create({
   },
   categoryPill: {
     flexBasis: '48%',
-    flexGrow: 1,
+    flexGrow: 0,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,

@@ -5,7 +5,6 @@ import { AppIcon } from './AppIcon';
 
 export interface FloatingAIAssistantButtonProps {
   onPress: () => void;
-  bottom?: number;
   right?: number;
   style?: ViewStyle;
 }
@@ -25,7 +24,7 @@ export const FloatingAIAssistantButton: React.FC<FloatingAIAssistantButtonProps>
         styles.button,
         {
           backgroundColor: colors.primary,
-           top: '50%',
+          top: '50%',
           marginTop: -28,
           right,
           shadowColor: colors.primary,

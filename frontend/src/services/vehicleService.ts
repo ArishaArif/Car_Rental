@@ -471,7 +471,7 @@ class VehicleService {
    * Return category summaries with count, min price, and metadata
    */
   public getCategoriesSummary(): CategorySummary[] {
-    const categories: VehicleCategory[] = ['Economy', 'Sedan', 'SUV', 'Luxury'];
+    const categories: VehicleCategory[] = ['Economy', 'Hatchback', 'Sedan', 'SUV', 'Luxury'];
 
     const meta: Record<
       VehicleCategory,
@@ -481,6 +481,11 @@ class VehicleService {
         icon: '⚡',
         badge: 'HIGH EFFICIENCY',
         tagline: 'Smart, nimble city mobility with maximum fuel range and easy parking.',
+      },
+      Hatchback: {
+        icon: '🚘',
+        badge: 'CITY-SMART',
+        tagline: 'Compact, versatile cars with easy maneuverability and flexible cargo space.',
       },
       Sedan: {
         icon: '🚗',

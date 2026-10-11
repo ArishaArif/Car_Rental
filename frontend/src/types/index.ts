@@ -93,7 +93,7 @@ export type AuthStackParamList = {
   ProfileSetup: { role: UserRole };
 };
 
-export type VehicleCategory = 'Economy' | 'Sedan' | 'SUV' | 'Luxury';
+export type VehicleCategory = 'Economy' | 'Hatchback' | 'Sedan' | 'SUV' | 'Luxury';
 export type TransmissionType = 'Automatic' | 'Manual';
 export type VehicleFuelType = 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric';
 export type VehicleAvailability =
@@ -769,4 +769,3 @@ export interface AppNotification {
   actionRoute?: string;
   metadata?: Record<string, any>;
 }
-

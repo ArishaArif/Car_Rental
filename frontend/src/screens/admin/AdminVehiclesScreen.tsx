@@ -97,13 +97,13 @@ export const AdminVehiclesScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.tabScroll}
           contentContainerStyle={styles.tabScrollContainer}
         >
-          {(['All', 'Sedan', 'SUV', 'Luxury', 'Economy'] as const).map(cat => {
+          {(['All', 'Sedan', 'SUV', 'Luxury', 'Economy', 'Hatchback'] as const).map(cat => {
             const isSelected = selectedCategory === cat;
             return (
               <TouchableOpacity
                 key={cat}
                 activeOpacity={0.8}
-                onPress={() => setSelectedCategory(cat as any)}
+                onPress={() => setSelectedCategory(cat)}
                 style={[
                   styles.tabButton,
                   {

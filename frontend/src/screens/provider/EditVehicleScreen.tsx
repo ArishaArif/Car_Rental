@@ -28,7 +28,7 @@ interface Props {
   route: EditVehicleRouteProp;
 }
 
-const CATEGORIES: VehicleCategory[] = ['Economy', 'Sedan', 'SUV', 'Luxury'];
+const CATEGORIES: VehicleCategory[] = ['Economy', 'Hatchback', 'Sedan', 'SUV', 'Luxury'];
 const TRANSMISSIONS: TransmissionType[] = ['Automatic', 'Manual'];
 const FUELS: VehicleFuelType[] = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
 const AVAILABILITIES: VehicleAvailability[] = [

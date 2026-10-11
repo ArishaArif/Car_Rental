@@ -45,6 +45,8 @@ export const CarCard: React.FC<CarCardProps> = ({
         return '#F59E0B'; // Warm amber
       case 'Economy':
         return colors.accent;
+      case 'Hatchback':
+        return colors.primary;
       case 'Sedan':
       default:
         return colors.primary;

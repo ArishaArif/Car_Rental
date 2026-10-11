@@ -28,7 +28,7 @@ interface FilterScreenProps {
   route: FilterScreenRouteProp;
 }
 
-const CATEGORIES: (VehicleCategory | 'All')[] = ['All', 'Economy', 'Sedan', 'SUV', 'Luxury'];
+const CATEGORIES: (VehicleCategory | 'All')[] = ['All', 'Economy', 'Hatchback', 'Sedan', 'SUV', 'Luxury'];
 const TRANSMISSIONS: (TransmissionType | 'All')[] = ['All', 'Automatic', 'Manual'];
 const FUELS: (VehicleFuelType | 'All')[] = ['All', 'Petrol', 'Diesel', 'Hybrid', 'Electric'];
 const SEATS_OPTIONS: (number | 'All')[] = ['All', 4, 5, 7];

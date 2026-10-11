@@ -35,7 +35,7 @@ const SAMPLE_PRESET_IMAGES = [
   { label: 'Honda Civic', url: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?q=80&w=800' },
 ];
 
-const CATEGORIES: VehicleCategory[] = ['Economy', 'Sedan', 'SUV', 'Luxury'];
+const CATEGORIES: VehicleCategory[] = ['Economy', 'Hatchback', 'Sedan', 'SUV', 'Luxury'];
 const TRANSMISSIONS: TransmissionType[] = ['Automatic', 'Manual'];
 const FUELS: VehicleFuelType[] = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
 const AVAILABILITIES: VehicleAvailability[] = ['Available', 'Maintenance', 'Archived'];

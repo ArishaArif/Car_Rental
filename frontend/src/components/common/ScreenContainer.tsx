@@ -91,7 +91,10 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
 
       {footer}
       {floatingAction ? (
-        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <View
+          pointerEvents="box-none"
+          style={[StyleSheet.absoluteFill, styles.floatingActionLayer]}
+        >
           {floatingAction}
         </View>
       ) : null}
@@ -105,6 +108,10 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  floatingActionLayer: {
+    zIndex: 999,
+    elevation: 10,
   },
   scrollContent: {
     flexGrow: 1,

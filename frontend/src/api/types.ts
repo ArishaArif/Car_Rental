@@ -90,7 +90,7 @@ export interface ApiVehicleCreate {
   brand: string;
   model: string;
   year: number;
-  category: 'Economy' | 'Sedan' | 'SUV' | 'Luxury' | 'Sports' | 'Electric' | 'Compact';
+  category: 'Economy' | 'Hatchback' | 'Sedan' | 'SUV' | 'Luxury' | 'Sports' | 'Electric' | 'Compact';
   image: string;
   price_per_day: number;
   weekly_price?: number;
@@ -116,7 +116,7 @@ export interface ApiVehicleResponse {
   brand: string;
   model: string;
   year: number;
-  category: 'Economy' | 'Sedan' | 'SUV' | 'Luxury';
+  category: 'Economy' | 'Hatchback' | 'Sedan' | 'SUV' | 'Luxury';
   image: string;
   images?: string[];
   price_per_day: number;

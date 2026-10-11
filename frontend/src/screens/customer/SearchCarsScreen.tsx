@@ -24,7 +24,7 @@ interface SearchCarsScreenProps {
   route: SearchCarsScreenRouteProp;
 }
 
-const CATEGORIES: (VehicleCategory | 'All')[] = ['All', 'Economy', 'Sedan', 'SUV', 'Luxury'];
+const CATEGORIES: (VehicleCategory | 'All')[] = ['All', 'Economy', 'Hatchback', 'Sedan', 'SUV', 'Luxury'];
 
 export const SearchCarsScreen: React.FC<SearchCarsScreenProps> = ({ navigation, route }) => {
   const { colors, typography, spacing, borderRadius } = useTheme();
@@ -62,7 +62,6 @@ export const SearchCarsScreen: React.FC<SearchCarsScreenProps> = ({ navigation, 
       floatingAction={
         <FloatingAIAssistantButton
           onPress={() => navigation.navigate('AIAssistant')}
-          bottom={110}
           right={20}
         />
       }
